@@ -560,6 +560,10 @@
       background: rgba(12, 17, 23, 0.72);
     }
 
+    .legend-item[hidden] {
+      display: none;
+    }
+
     .legend-line {
       width: 18px;
       height: 3px;
@@ -1854,10 +1858,10 @@
     };
     const viewLayouts = {
       classic: {
-        ra: { x: -455, y: -10 },
-        ca: { x: 0, y: -20 },
-        ocsp: { x: 455, y: -10 },
-        kmc: { x: 0, y: 265 }
+        ra: { x: -455, y: -128 },
+        ca: { x: 0, y: -138 },
+        ocsp: { x: 455, y: -128 },
+        kmc: { x: -10, y: 250 }
       },
       cloud: {
         "cloud-tenant": { x: -772, y: -203 },
