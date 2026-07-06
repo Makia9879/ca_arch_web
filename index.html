@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RA CA OCSP KMC Architecture</title>
+  <title>CA Architecture Diagrams</title>
   <style>
     :root {
       color-scheme: dark;
@@ -20,6 +20,10 @@
       --cert: #62a8ff;
       --status: #76d98b;
       --key: #b891ff;
+      --tenant: #7cb7ff;
+      --edge: #5eead4;
+      --manage: #ffbd66;
+      --db: #b797ff;
     }
 
     * {
@@ -70,9 +74,61 @@
       line-height: 1.5;
     }
 
+    .view-toggle {
+      position: absolute;
+      top: 108px;
+      left: 42px;
+      z-index: 8;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid rgba(222, 235, 250, 0.18);
+      background: rgba(12, 17, 23, 0.78);
+      color: var(--text);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      padding: 10px 13px;
+      font: inherit;
+      font-size: 12px;
+      line-height: 1;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .view-toggle::before {
+      content: "";
+      flex: 0 0 36px;
+      width: 36px;
+      height: 8px;
+      align-self: center;
+      background:
+        linear-gradient(
+          90deg,
+          var(--cert) 0 8px,
+          transparent 8px 14px,
+          var(--status) 14px 22px,
+          transparent 22px 28px,
+          var(--key) 28px 36px
+        );
+      box-shadow: none;
+    }
+
+    .view-toggle:hover,
+    .view-toggle:focus-visible {
+      border-color: rgba(237, 244, 255, 0.72);
+      background: rgba(17, 26, 36, 0.96);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38), 0 0 16px rgba(237, 244, 255, 0.16);
+      transform: translateY(-2px);
+      outline: none;
+    }
+
     .canvas {
       position: absolute;
       inset: 0;
+    }
+
+    .canvas[hidden] {
+      display: none;
     }
 
     .flow-svg {
@@ -134,6 +190,23 @@
 
     .flow.key {
       color: var(--key);
+    }
+
+    .flow.tenant,
+    .flow.route {
+      color: var(--tenant);
+    }
+
+    .flow.edge {
+      color: var(--edge);
+    }
+
+    .flow.manage {
+      color: var(--manage);
+    }
+
+    .flow.db {
+      color: var(--db);
     }
 
     .flow,
@@ -248,6 +321,53 @@
     .node.kmc {
       width: 270px;
       color: var(--kmc);
+    }
+
+    .node.cloud {
+      width: clamp(188px, 11.5vw, 218px);
+      min-height: 122px;
+      padding: 16px 16px 14px;
+    }
+
+    .node.cloud h2 {
+      font-size: 20px;
+      line-height: 1.08;
+    }
+
+    .node.cloud .node-mark {
+      width: 38px;
+      height: 38px;
+      font-size: 12px;
+    }
+
+    .node.cloud p {
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .node.cloud li {
+      font-size: 11px;
+    }
+
+    .node.cloud ul {
+      display: none;
+    }
+
+    .node.tenant {
+      color: var(--tenant);
+    }
+
+    .node.edge {
+      color: var(--edge);
+    }
+
+    .node.manage,
+    .node.web {
+      color: var(--manage);
+    }
+
+    .node.db {
+      color: var(--db);
     }
 
     .node-head {
@@ -368,6 +488,31 @@
       color: var(--key);
     }
 
+    .flow-label.tenant,
+    .flow-label.route {
+      color: var(--tenant);
+    }
+
+    .flow-label.edge {
+      color: var(--edge);
+    }
+
+    .flow-label.manage {
+      color: var(--manage);
+    }
+
+    .flow-label.db {
+      color: var(--db);
+    }
+
+    .cloud-canvas .flow-glow {
+      filter: url(#cloudSoftGlow);
+    }
+
+    .cloud-canvas .flow-dot {
+      filter: url(#cloudDotGlow);
+    }
+
     .flow-label:hover,
     .flow-label.active {
       background: rgba(17, 26, 36, 0.96);
@@ -429,6 +574,24 @@
 
     .legend-item.key {
       color: var(--key);
+    }
+
+    .legend-item.route,
+    .legend-item.tenant {
+      color: var(--tenant);
+    }
+
+    .legend-item.edge {
+      color: var(--edge);
+    }
+
+    .legend-item.db {
+      color: var(--db);
+    }
+
+    .legend-item.manage,
+    .legend-item.web {
+      color: var(--manage);
     }
 
     .github-link {
@@ -689,9 +852,11 @@
 <body>
   <main class="shell">
     <section class="title" aria-label="架构图标题">
-      <h1>RA / CA / OCSP / KMC 产品联通架构</h1>
-      <p>证书业务、状态同步与密钥服务之间的数据流关系</p>
+      <h1 id="page-title">RA / CA / OCSP / KMC 产品联通架构</h1>
+      <p id="page-subtitle">证书业务、状态同步与密钥服务之间的数据流关系</p>
     </section>
+
+    <button class="view-toggle" type="button" id="view-toggle" aria-pressed="false">切换为云版 CA 部署架构</button>
 
     <a class="github-link" href="https://github.com/makia9879" target="_blank" rel="noopener noreferrer" aria-label="打开 GitHub 主页" title="GitHub">
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -700,14 +865,15 @@
     </a>
 
     <section class="legend" aria-label="数据流图例">
-      <div class="legend-item cert"><span class="legend-line"></span><span>证书业务</span></div>
-      <div class="legend-item status"><span class="legend-line"></span><span>状态服务</span></div>
-      <div class="legend-item key"><span class="legend-line"></span><span>密钥服务</span></div>
+      <div class="legend-item cert"><span class="legend-line"></span><span id="legend-cert">证书业务</span></div>
+      <div class="legend-item status"><span class="legend-line"></span><span id="legend-status">状态服务</span></div>
+      <div class="legend-item key"><span class="legend-line"></span><span id="legend-key">密钥服务</span></div>
+      <div class="legend-item manage" hidden><span class="legend-line"></span><span id="legend-extra">Web-CA 接口</span></div>
     </section>
 
     <div class="drag-hint" aria-hidden="true">产品卡片可拖动移动</div>
 
-    <div class="canvas" aria-label="产品架构画布">
+    <div class="canvas" data-view="classic" aria-label="产品架构画布">
       <svg class="flow-svg" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-label="产品之间的数据联通关系">
         <defs>
           <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -835,6 +1001,238 @@
         <span>CA ⇄ KMC：CAKM 二进制协议、密钥托管、密钥恢复、密钥吊销</span>
       </div>
     </div>
+
+    <div class="canvas cloud-canvas" data-view="cloud" aria-label="云版 CA 部署架构画布" hidden>
+      <svg class="flow-svg" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-label="云版 CA 部署链路">
+        <defs>
+          <filter id="cloudSoftGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="cloudDotGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <marker id="arrow-cloud-route" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#7cb7ff"></path>
+          </marker>
+          <marker id="arrow-cloud-edge" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#5eead4"></path>
+          </marker>
+          <marker id="arrow-cloud-manage" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffbd66"></path>
+          </marker>
+          <marker id="arrow-cloud-db" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#b797ff"></path>
+          </marker>
+        </defs>
+
+        <g class="flow route" data-flow="cloud-tenant-nginx" role="button" tabindex="0" aria-label="查看租户到租户区 Nginx 联动详情">
+          <path class="flow-base" d="" marker-end="url(#arrow-cloud-route)"></path>
+          <path class="flow-glow" d=""></path>
+          <path class="flow-core" d=""></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.6s" repeatCount="indefinite" path=""></animateMotion></circle>
+          <path class="flow-hit" d=""></path>
+        </g>
+
+        <g class="flow edge" data-flow="cloud-nginx-proxy" role="button" tabindex="0" aria-label="查看租户区 Nginx 到 ca_admin proxyserver 联动详情">
+          <path class="flow-base" d="" marker-end="url(#arrow-cloud-edge)"></path>
+          <path class="flow-glow" d=""></path>
+          <path class="flow-core" d=""></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.4s" repeatCount="indefinite" path=""></animateMotion></circle>
+          <path class="flow-hit" d=""></path>
+        </g>
+
+        <g class="flow edge" data-flow="cloud-proxy-unified" role="button" tabindex="0" aria-label="查看租户区 ca_admin proxyserver 到管理区统服 Nginx 联动详情">
+          <path class="flow-base" d="" marker-end="url(#arrow-cloud-edge)"></path>
+          <path class="flow-glow" d=""></path>
+          <path class="flow-core" d=""></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.3s" repeatCount="indefinite" path=""></animateMotion></circle>
+          <path class="flow-hit" d=""></path>
+        </g>
+
+        <g class="flow edge" data-flow="cloud-unified-manage-nginx" role="button" tabindex="0" aria-label="查看管理区统服 Nginx 到管理区 Nginx 联动详情">
+          <path class="flow-base" d="" marker-end="url(#arrow-cloud-edge)"></path>
+          <path class="flow-glow" d=""></path>
+          <path class="flow-core" d=""></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.5s" repeatCount="indefinite" path=""></animateMotion></circle>
+          <path class="flow-hit" d=""></path>
+        </g>
+
+        <g class="flow manage" data-flow="cloud-nginx-web" role="button" tabindex="0" aria-label="查看管理区 Nginx 到 ca_admin_web 联动详情">
+          <path class="flow-base" d="" marker-end="url(#arrow-cloud-manage)"></path>
+          <path class="flow-glow" d=""></path>
+          <path class="flow-core" d=""></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.2s" repeatCount="indefinite" path=""></animateMotion></circle>
+          <path class="flow-hit" d=""></path>
+        </g>
+
+        <g class="flow manage" data-flow="cloud-web-admin" role="button" tabindex="0" aria-label="查看管理区 ca_admin_web 到 ca_admin 联动详情">
+          <path class="flow-base" d="" marker-end="url(#arrow-cloud-manage)"></path>
+          <path class="flow-glow" d=""></path>
+          <path class="flow-core" d=""></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.1s" repeatCount="indefinite" path=""></animateMotion></circle>
+          <path class="flow-hit" d=""></path>
+        </g>
+
+        <g class="flow db" data-flow="cloud-admin-db" role="button" tabindex="0" aria-label="查看管理区 ca_admin 到租户数据库联动详情">
+          <path class="flow-base" d="" marker-end="url(#arrow-cloud-db)"></path>
+          <path class="flow-glow" d=""></path>
+          <path class="flow-core" d=""></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.7s" repeatCount="indefinite" path=""></animateMotion></circle>
+          <path class="flow-hit" d=""></path>
+        </g>
+
+      </svg>
+
+      <article class="node cloud tenant" data-product="cloud-tenant" role="button" tabindex="0" aria-label="查看租户入口说明">
+        <div class="node-head">
+          <div class="node-mark">租</div>
+          <div>
+            <h2>租户</h2>
+            <div class="name">Tenant Access</div>
+          </div>
+        </div>
+        <p>租户侧业务入口，访问本租户 CA 门户与证书状态能力。</p>
+        <ul>
+          <li>访问租户区入口</li>
+          <li>证书业务请求发起</li>
+        </ul>
+      </article>
+
+      <article class="node cloud edge" data-product="cloud-tenant-nginx" role="button" tabindex="0" aria-label="查看租户区 Nginx 说明">
+        <div class="node-head">
+          <div class="node-mark">TN</div>
+          <div>
+            <h2>租户区 Nginx</h2>
+            <div class="name">Tenant Gateway</div>
+          </div>
+        </div>
+        <p>租户区访问入口，负责请求转发、TLS 终止和入口隔离。</p>
+        <ul>
+          <li>租户区路由入口</li>
+          <li>转发至 ca_admin proxyserver</li>
+        </ul>
+      </article>
+
+      <article class="node cloud tenant" data-product="cloud-tenant-ca" role="button" tabindex="0" aria-label="查看租户区 ca_admin proxyserver 说明">
+        <div class="node-head">
+          <div class="node-mark">TP</div>
+          <div>
+            <h2>租户区 ca_admin</h2>
+            <div class="name">ProxyServer + CRL Cache</div>
+          </div>
+        </div>
+        <p>租户区只承接入口代理和 CRL 查询缓存，业务执行转交管理区。</p>
+        <ul>
+          <li>查询并缓存 CRL</li>
+          <li>透传业务接口到管理区</li>
+        </ul>
+      </article>
+
+      <article class="node cloud edge" data-product="cloud-unified-nginx" role="button" tabindex="0" aria-label="查看管理区统服 Nginx 说明">
+        <div class="node-head">
+          <div class="node-mark">UN</div>
+          <div>
+            <h2>管理区统服 Nginx</h2>
+            <div class="name">Unified Service Gateway</div>
+          </div>
+        </div>
+        <p>管理区统一服务入口，接收租户区代理请求并进入管理区链路。</p>
+        <ul>
+          <li>统一服务入口</li>
+          <li>按租户路由到管理区</li>
+        </ul>
+      </article>
+
+      <article class="node cloud edge" data-product="cloud-manage-nginx" role="button" tabindex="0" aria-label="查看管理区 Nginx 说明">
+        <div class="node-head">
+          <div class="node-mark">MN</div>
+          <div>
+            <h2>管理区 Nginx</h2>
+            <div class="name">Management Gateway</div>
+          </div>
+        </div>
+        <p>管理区内部网关，承接统服入口流量并转发到管理端前后端。</p>
+        <ul>
+          <li>管理区反向代理</li>
+          <li>前端资源与 API 入口</li>
+        </ul>
+      </article>
+
+      <article class="node cloud web" data-product="cloud-admin-web" role="button" tabindex="0" aria-label="查看管理区 ca_admin_web 说明">
+        <div class="node-head">
+          <div class="node-mark">WEB</div>
+          <div>
+            <h2>管理区 ca_admin_web</h2>
+            <div class="name">Admin Console</div>
+          </div>
+        </div>
+        <p>管理区 CA 控制台，所有业务页面最终调用管理区 ca_admin。</p>
+        <ul>
+          <li>证书与租户业务页面</li>
+          <li>调用管理区 ca_admin API</li>
+        </ul>
+      </article>
+
+      <article class="node cloud manage" data-product="cloud-admin" role="button" tabindex="0" aria-label="查看管理区 ca_admin 说明">
+        <div class="node-head">
+          <div class="node-mark">CA</div>
+          <div>
+            <h2>管理区 ca_admin</h2>
+            <div class="name">Business Executor</div>
+          </div>
+        </div>
+        <p>云版 CA 的业务执行核心，承接所有证书生命周期与管理接口。</p>
+        <ul>
+          <li>所有业务接口执行</li>
+          <li>按租户库读写业务数据</li>
+        </ul>
+      </article>
+
+      <article class="node cloud db" data-product="cloud-db" role="button" tabindex="0" aria-label="查看管理区租户数据库说明">
+        <div class="node-head">
+          <div class="node-mark">DB</div>
+          <div>
+            <h2>管理区数据库</h2>
+            <div class="name">Tenant Databases</div>
+          </div>
+        </div>
+        <p>管理区 ca_admin 与统服共用数据库，按库分租户，一库一租户。</p>
+        <ul>
+          <li>一库一租户</li>
+          <li>统服与 ca_admin 共用</li>
+        </ul>
+      </article>
+
+      <div class="flow-label route" data-flow="cloud-tenant-nginx" role="button" tabindex="0" aria-label="点击查看租户到租户区 Nginx 联动详情" title="点击查看租户到租户区 Nginx 联动详情">
+        <span>租户访问租户区 Nginx</span>
+      </div>
+      <div class="flow-label edge" data-flow="cloud-nginx-proxy" role="button" tabindex="0" aria-label="点击查看租户区 Nginx 到 ca_admin proxyserver 联动详情" title="点击查看租户区 Nginx 到 ca_admin proxyserver 联动详情">
+        <span>租户区 Nginx 转发到租户区 ca_admin proxyserver</span>
+      </div>
+      <div class="flow-label edge" data-flow="cloud-proxy-unified" role="button" tabindex="0" aria-label="点击查看租户区 ca_admin proxyserver 到管理区统服 Nginx 联动详情" title="点击查看租户区 ca_admin proxyserver 到管理区统服 Nginx 联动详情">
+        <span>租户区代理进入管理区统服 Nginx</span>
+      </div>
+      <div class="flow-label edge" data-flow="cloud-unified-manage-nginx" role="button" tabindex="0" aria-label="点击查看管理区统服 Nginx 到管理区 Nginx 联动详情" title="点击查看管理区统服 Nginx 到管理区 Nginx 联动详情">
+        <span>统服 Nginx 转入管理区 Nginx</span>
+      </div>
+      <div class="flow-label manage" data-flow="cloud-nginx-web" role="button" tabindex="0" aria-label="点击查看管理区 Nginx 到 ca_admin_web 联动详情" title="点击查看管理区 Nginx 到 ca_admin_web 联动详情">
+        <span>管理区 Nginx 提供 ca_admin_web</span>
+      </div>
+      <div class="flow-label manage" data-flow="cloud-web-admin" role="button" tabindex="0" aria-label="点击查看管理区 ca_admin_web 到 ca_admin 联动详情" title="点击查看管理区 ca_admin_web 到 ca_admin 联动详情">
+        <span>ca_admin_web 调用管理区 ca_admin</span>
+      </div>
+      <div class="flow-label db" data-flow="cloud-admin-db" role="button" tabindex="0" aria-label="点击查看管理区 ca_admin 到租户数据库联动详情" title="点击查看管理区 ca_admin 到租户数据库联动详情">
+        <span>管理区 ca_admin 按租户库读写</span>
+      </div>
+    </div>
   </main>
 
   <section class="detail-modal" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
@@ -883,7 +1281,7 @@
         kicker: "产品功能模块",
         title: "CA / Certificate Authority",
         subtitle: "CA 是证书生命周期核心，负责 CA 体系、证书签发、吊销发布、状态数据和外部产品协同。",
-        accent: "#ffbd66",
+        accent: "#5eead4",
         modules: [
           {
             name: "CA 体系管理",
@@ -961,6 +1359,86 @@
             desc: "控制密钥相关操作的授权边界，并保留审计证据。",
             items: ["角色、审批与权限隔离", "密钥访问控制策略", "操作日志与合规审计"]
           }
+        ]
+      },
+      "cloud-tenant": {
+        kicker: "云版 CA 部署节点",
+        title: "租户 / Tenant Access",
+        subtitle: "租户通过租户区入口访问 CA 能力，业务请求沿租户区代理链路进入管理区执行。",
+        accent: "#7cb7ff",
+        modules: [
+          { name: "访问入口", desc: "租户侧用户或业务系统只面对租户区入口。", items: ["访问本租户 CA 门户", "发起证书查询与业务操作", "按租户身份进入独立路由"] },
+          { name: "边界隔离", desc: "租户入口和管理区执行域分离，避免租户直接触达管理区服务。", items: ["租户区承接入口流量", "管理区承接业务执行", "链路中保留租户上下文"] }
+        ]
+      },
+      "cloud-tenant-nginx": {
+        kicker: "云版 CA 部署节点",
+        title: "租户区 Nginx / Tenant Gateway",
+        subtitle: "租户区 Nginx 是租户访问链路的第一层网关，负责把请求导向租户区 ca_admin proxyserver。",
+        accent: "#5eead4",
+        modules: [
+          { name: "入口转发", desc: "承接租户侧 HTTP(S) 流量并按路由转发。", items: ["TLS / 域名入口", "静态资源或 API 路由", "转发到租户区 ca_admin proxyserver"] },
+          { name: "租户区隔离", desc: "把租户侧入口固定在租户区网络内。", items: ["管理区服务不直接暴露给租户", "链路从租户区代理进入管理区", "便于入口限流和访问审计"] }
+        ]
+      },
+      "cloud-tenant-ca": {
+        kicker: "云版 CA 部署节点",
+        title: "租户区 ca_admin / ProxyServer + CRL Cache",
+        subtitle: "租户区 ca_admin 负责入口代理和 CRL 查询缓存，不在租户区执行完整 CA 业务。",
+        accent: "#7cb7ff",
+        modules: [
+          { name: "CRL 查询缓存", desc: "租户区保留 CRL 查询与缓存能力，降低管理区重复读取压力。", items: ["查询 CRL", "缓存 CRL 结果", "面向租户区提供就近读取"] },
+          { name: "业务代理", desc: "证书生命周期和管理类业务接口继续转交管理区 ca_admin 执行。", items: ["透传业务请求", "保留租户上下文", "不在租户区落地业务执行"] }
+        ]
+      },
+      "cloud-unified-nginx": {
+        kicker: "云版 CA 部署节点",
+        title: "管理区统服 Nginx / Unified Service Gateway",
+        subtitle: "管理区统服 Nginx 接收租户区代理链路流量，是进入管理区统一服务链路的入口。",
+        accent: "#5eead4",
+        modules: [
+          { name: "统一入口", desc: "承接来自租户区 ca_admin proxyserver 的管理区入口流量。", items: ["接入租户区代理请求", "按租户上下文转发", "连接管理区 Nginx"] },
+          { name: "共库模型", desc: "统服和管理区 ca_admin 使用同一组按租户拆分的数据库。", items: ["按库分租户", "一库一租户", "与 ca_admin 共享租户数据边界"] }
+        ]
+      },
+      "cloud-manage-nginx": {
+        kicker: "云版 CA 部署节点",
+        title: "管理区 Nginx / Management Gateway",
+        subtitle: "管理区 Nginx 是管理区内部网关，连接统服入口、ca_admin_web 和 ca_admin。",
+        accent: "#5eead4",
+        modules: [
+          { name: "管理区路由", desc: "在管理区内承接统一服务入口流量并转发到对应应用。", items: ["转发前端页面请求", "转发管理 API 请求", "隔离内部服务地址"] },
+          { name: "控制台入口", desc: "为管理区 ca_admin_web 提供访问入口。", items: ["管理端静态资源", "管理端 API 代理", "统一管理区访问策略"] }
+        ]
+      },
+      "cloud-admin-web": {
+        kicker: "云版 CA 部署节点",
+        title: "管理区 ca_admin_web / Admin Console",
+        subtitle: "管理区 ca_admin_web 是云版 CA 的管理控制台，页面操作最终调用管理区 ca_admin。",
+        accent: "#ffbd66",
+        modules: [
+          { name: "管理控制台", desc: "提供租户、证书、模板、状态等管理页面。", items: ["租户业务页面", "证书生命周期页面", "系统与审计页面"] },
+          { name: "API 调用", desc: "前端不直接执行业务，所有业务能力由管理区 ca_admin 后端承接。", items: ["调用 ca_admin API", "展示业务执行结果", "维护管理端会话与权限"] }
+        ]
+      },
+      "cloud-admin": {
+        kicker: "云版 CA 部署节点",
+        title: "管理区 ca_admin / Business Executor",
+        subtitle: "管理区 ca_admin 是云版 CA 的业务执行核心，承接所有证书生命周期和管理业务接口。",
+        accent: "#ffbd66",
+        modules: [
+          { name: "业务执行", desc: "所有 CA 管理与证书生命周期接口最终在管理区 ca_admin 执行。", items: ["证书签发、更新、吊销", "模板、CA、状态管理", "审计与业务结果回写"] },
+          { name: "租户数据访问", desc: "按租户上下文访问对应租户库。", items: ["按库分租户", "一库一租户", "与统服共用数据库模型"] }
+        ]
+      },
+      "cloud-db": {
+        kicker: "云版 CA 部署节点",
+        title: "管理区数据库 / Tenant Databases",
+        subtitle: "管理区 ca_admin 和统服共用数据库，数据库按租户拆分，一库一租户。",
+        accent: "#b797ff",
+        modules: [
+          { name: "租户分库", desc: "数据模型以租户库为隔离单位。", items: ["按库分租户", "一库一租户", "租户上下文决定目标库"] },
+          { name: "共用数据边界", desc: "统服与管理区 ca_admin 在管理区内共享同一租户库模型。", items: ["统服访问租户库", "ca_admin 访问租户库", "跨服务保持同一租户数据视图"] }
         ]
       }
     };
@@ -1098,6 +1576,90 @@
           ["密钥引用传递", "优先传递密钥 ID、HSM 索引、证书引用或封装材料，减少明文密钥暴露面。"],
           ["失败重试与审计", "对 KMC 调用超时、失败码、设备异常建立重试和跨系统审计链。"]
         ]
+      },
+      "cloud-tenant-nginx": {
+        kicker: "云版 CA 部署链路",
+        title: "租户 → 租户区 Nginx",
+        subtitle: "租户访问首先进入租户区 Nginx，入口层负责把租户流量限制在租户区网络边界内。",
+        accent: "#7cb7ff",
+        summary: { name: "链路边界", desc: "租户不直接访问管理区服务，所有请求先进入租户区入口。", items: ["租户访问入口", "租户区网关承接", "保留租户访问上下文"] },
+        interactions: [
+          { name: "入口访问", desc: "租户侧用户或系统访问租户区域名。", items: ["HTTP(S) 请求", "租户域名或入口路径", "访问日志与限流策略"] },
+          { name: "边界控制", desc: "租户区 Nginx 作为第一层流量边界。", items: ["TLS 终止或透传", "入口路由", "管理区不直接暴露"] }
+        ],
+        methods: [["HTTP(S)", "承载租户侧页面与 API 访问流量。"], ["租户上下文", "通过域名、路径、Header 或会话把租户身份带入后续链路。"]]
+      },
+      "cloud-nginx-proxy": {
+        kicker: "云版 CA 部署链路",
+        title: "租户区 Nginx → 租户区 ca_admin proxyserver",
+        subtitle: "租户区 Nginx 将请求转发到租户区 ca_admin proxyserver，租户区 ca_admin 负责 CRL 查询缓存和业务代理。",
+        accent: "#5eead4",
+        summary: { name: "链路边界", desc: "租户区 ca_admin 不承接完整业务执行，核心职责是代理和 CRL 缓存。", items: ["入口代理", "CRL 查询与缓存", "业务请求继续进入管理区"] },
+        interactions: [
+          { name: "代理转发", desc: "把租户入口请求送入租户区 ca_admin proxyserver。", items: ["保留原始租户上下文", "区分 CRL 查询和业务接口", "记录代理访问链路"] },
+          { name: "CRL 缓存", desc: "租户区 ca_admin 可查询并缓存 CRL，减少重复穿透管理区。", items: ["CRL 查询", "本地缓存", "缓存过期刷新"] }
+        ],
+        methods: [["Reverse Proxy", "租户区 Nginx 到 proxyserver 的内部转发链路。"], ["CRL Cache", "租户区 ca_admin 就近缓存 CRL 响应。"]]
+      },
+      "cloud-proxy-unified": {
+        kicker: "云版 CA 部署链路",
+        title: "租户区 ca_admin proxyserver → 管理区统服 Nginx",
+        subtitle: "租户区代理把业务接口转交管理区统服 Nginx，管理区开始承接后续业务链路。",
+        accent: "#5eead4",
+        summary: { name: "链路边界", desc: "除 CRL 缓存外，租户区业务请求穿过 proxyserver 进入管理区统一服务入口。", items: ["跨区代理", "租户上下文传递", "业务执行转交管理区"] },
+        interactions: [
+          { name: "业务透传", desc: "proxyserver 将证书业务、管理业务等接口转发到管理区。", items: ["业务 API 请求", "租户标识", "认证和审计上下文"] },
+          { name: "管理区接入", desc: "管理区统服 Nginx 接收来自租户区的代理请求。", items: ["统一入口", "链路鉴权", "按租户路由"] }
+        ],
+        methods: [["Proxy API", "用于承载租户区到管理区的业务接口转发。"], ["Tenant Context", "后续选择租户库和业务权限的关键输入。"]]
+      },
+      "cloud-unified-manage-nginx": {
+        kicker: "云版 CA 部署链路",
+        title: "管理区统服 Nginx → 管理区 Nginx",
+        subtitle: "管理区统服 Nginx 将进入管理区的统一服务流量转入管理区 Nginx。",
+        accent: "#ffbd66",
+        summary: { name: "链路边界", desc: "统服入口负责管理区统一接入，管理区 Nginx 负责内部应用路由。", items: ["统一服务入口", "管理区内部路由", "进入 ca_admin_web / ca_admin 链路"] },
+        interactions: [
+          { name: "统一接入", desc: "统服 Nginx 接收并规范化来自租户区的流量。", items: ["租户上下文校验", "入口路由", "转入管理区 Nginx"] },
+          { name: "内部路由", desc: "管理区 Nginx 将流量分发到前端或后端。", items: ["前端资源", "后端 API", "管理区访问策略"] }
+        ],
+        methods: [["Internal HTTP(S)", "管理区网关之间的内部通信。"], ["Route Policy", "按路径、服务和租户上下文进行转发。"]]
+      },
+      "cloud-nginx-web": {
+        kicker: "云版 CA 部署链路",
+        title: "管理区 Nginx → 管理区 ca_admin_web",
+        subtitle: "管理区 Nginx 提供 ca_admin_web 管理控制台入口，页面运行在管理区侧。",
+        accent: "#ffbd66",
+        summary: { name: "链路边界", desc: "ca_admin_web 只提供管理交互页面，业务动作通过后续 API 调用 ca_admin。", items: ["管理控制台入口", "静态资源服务", "页面 API 入口"] },
+        interactions: [
+          { name: "控制台访问", desc: "用户进入管理区 ca_admin_web 页面。", items: ["证书管理页面", "租户管理页面", "系统配置页面"] },
+          { name: "前后端分离", desc: "页面展示与业务执行分离。", items: ["前端呈现", "API 调用", "后端执行"] }
+        ],
+        methods: [["Static Web", "管理区 Nginx 提供 ca_admin_web 页面资源。"], ["API Gateway", "页面后续 API 仍经管理区链路调用。"]]
+      },
+      "cloud-web-admin": {
+        kicker: "云版 CA 部署链路",
+        title: "管理区 ca_admin_web → 管理区 ca_admin",
+        subtitle: "管理区 ca_admin_web 的业务操作最终调用管理区 ca_admin，所有业务接口由管理区 ca_admin 执行。",
+        accent: "#ffbd66",
+        summary: { name: "链路边界", desc: "云版 CA 的业务执行集中在管理区 ca_admin，租户区 ca_admin 不执行完整业务。", items: ["所有业务接口执行", "证书生命周期处理", "管理区统一审计"] },
+        interactions: [
+          { name: "业务接口", desc: "前端页面调用 ca_admin 后端完成真实业务。", items: ["签发、更新、吊销", "模板与 CA 管理", "审计与查询"] },
+          { name: "结果返回", desc: "ca_admin 返回业务处理结果给 ca_admin_web。", items: ["业务状态", "证书数据", "错误码与提示"] }
+        ],
+        methods: [["REST / Management API", "ca_admin_web 到 ca_admin 的管理接口调用。"], ["Business Executor", "管理区 ca_admin 承接所有业务执行。"]]
+      },
+      "cloud-admin-db": {
+        kicker: "云版 CA 数据链路",
+        title: "管理区 ca_admin ⇄ 管理区数据库",
+        subtitle: "管理区 ca_admin 按租户上下文访问对应租户库，数据模型是一库一租户。",
+        accent: "#b797ff",
+        summary: { name: "数据边界", desc: "业务执行时根据租户上下文选择目标库，租户之间按库隔离。", items: ["按库分租户", "一库一租户", "ca_admin 读写业务数据"] },
+        interactions: [
+          { name: "业务读写", desc: "ca_admin 在对应租户库内完成证书、模板、状态和审计数据读写。", items: ["证书生命周期数据", "租户业务配置", "审计与状态记录"] },
+          { name: "租户隔离", desc: "不同租户对应不同数据库。", items: ["租户上下文选库", "库级隔离", "避免跨租户混写"] }
+        ],
+        methods: [["Tenant Database", "以租户库作为数据隔离单元。"], ["Shared Model", "与统服共享同一套租户分库模型。"]]
       }
     };
 
@@ -1105,8 +1667,15 @@
     const flowLabels = [...document.querySelectorAll(".flow-label")];
     const productNodes = [...document.querySelectorAll("[data-product]")];
     const shell = document.querySelector(".shell");
-    const canvas = document.querySelector(".canvas");
-    const flowSvg = document.querySelector(".flow-svg");
+    const canvases = [...document.querySelectorAll(".canvas")];
+    const viewToggle = document.querySelector("#view-toggle");
+    const pageTitle = document.querySelector("#page-title");
+    const pageSubtitle = document.querySelector("#page-subtitle");
+    const legendCert = document.querySelector("#legend-cert");
+    const legendStatus = document.querySelector("#legend-status");
+    const legendKey = document.querySelector("#legend-key");
+    const legendExtra = document.querySelector("#legend-extra");
+    const legendItems = [...document.querySelectorAll(".legend-item")];
     const modal = document.querySelector("#detail-modal");
     const modalKicker = document.querySelector("#modal-kicker");
     const modalTitle = document.querySelector("#modal-title");
@@ -1114,11 +1683,57 @@
     const modalContent = document.querySelector("#modal-content");
     const modalClose = document.querySelector("#modal-close");
     const productNodeMap = Object.fromEntries(productNodes.map((node) => [node.dataset.product, node]));
-    const flowPairs = {
-      "ra-ca": ["ra", "ca"],
-      "ca-ocsp": ["ca", "ocsp"],
-      "ca-kmc": ["ca", "kmc"]
+    const flowPairsByView = {
+      classic: {
+        "ra-ca": ["ra", "ca"],
+        "ca-ocsp": ["ca", "ocsp"],
+        "ca-kmc": ["ca", "kmc"]
+      },
+      cloud: {
+        "cloud-tenant-nginx": ["cloud-tenant", "cloud-tenant-nginx"],
+        "cloud-nginx-proxy": ["cloud-tenant-nginx", "cloud-tenant-ca"],
+        "cloud-proxy-unified": ["cloud-tenant-ca", "cloud-unified-nginx"],
+        "cloud-unified-manage-nginx": ["cloud-unified-nginx", "cloud-manage-nginx"],
+        "cloud-nginx-web": ["cloud-manage-nginx", "cloud-admin-web"],
+        "cloud-web-admin": ["cloud-admin-web", "cloud-admin"],
+        "cloud-admin-db": ["cloud-admin", "cloud-db"]
+      }
     };
+    const viewMeta = {
+      classic: {
+        title: "RA / CA / OCSP / KMC 产品联通架构",
+        subtitle: "证书业务、状态同步与密钥服务之间的数据流关系",
+        toggle: "切换为云版 CA 部署架构",
+        legend: ["证书业务", "状态服务", "密钥服务"],
+        legendClasses: ["cert", "status", "key"]
+      },
+      cloud: {
+        title: "云版 CA 部署架构",
+        subtitle: "租户区入口代理与管理区集中业务执行、租户分库数据模型",
+        toggle: "切换为产品联通架构",
+        legend: ["访问链路", "代理链路", "租户分库", "Web-CA 接口"],
+        legendClasses: ["route", "edge", "db", "manage"]
+      }
+    };
+    const viewLayouts = {
+      classic: {
+        ra: { x: -455, y: -10 },
+        ca: { x: 0, y: -20 },
+        ocsp: { x: 455, y: -10 },
+        kmc: { x: 0, y: 265 }
+      },
+      cloud: {
+        "cloud-tenant": { x: -640, y: -110 },
+        "cloud-tenant-nginx": { x: -320, y: -110 },
+        "cloud-tenant-ca": { x: 0, y: -110 },
+        "cloud-unified-nginx": { x: 320, y: -110 },
+        "cloud-manage-nginx": { x: 640, y: -110 },
+        "cloud-admin-web": { x: 395, y: 285 },
+        "cloud-admin": { x: -5, y: 285 },
+        "cloud-db": { x: 190, y: 525 }
+      }
+    };
+    let currentView = "classic";
     let lastActiveElement = null;
     let dragState = null;
 
@@ -1128,10 +1743,26 @@
       });
     }
 
-    function canvasSize() {
+    function activeCanvas() {
+      return canvases.find((item) => item.dataset.view === currentView);
+    }
+
+    function activeFlowSvg() {
+      return activeCanvas().querySelector(".flow-svg");
+    }
+
+    function activeProductNodes() {
+      return [...activeCanvas().querySelectorAll("[data-product]")];
+    }
+
+    function activeFlowPairs() {
+      return flowPairsByView[currentView];
+    }
+
+    function canvasSize(canvasEl = activeCanvas()) {
       return {
-        width: canvas.offsetWidth,
-        height: canvas.offsetHeight
+        width: canvasEl.offsetWidth,
+        height: canvasEl.offsetHeight
       };
     }
 
@@ -1139,10 +1770,11 @@
       return Math.min(Math.max(value, min), max);
     }
 
-    function setNodePosition(node, left, top) {
-      const size = canvasSize();
+    function setNodePosition(node, left, top, canvasEl = node.closest(".canvas")) {
+      const size = canvasSize(canvasEl);
+      const safeTopMin = canvasEl.dataset.view === "cloud" ? 154 : 96;
       const safeLeft = clamp(left, 18, size.width - node.offsetWidth - 18);
-      const safeTop = clamp(top, 96, size.height - node.offsetHeight - 18);
+      const safeTop = clamp(top, safeTopMin, size.height - node.offsetHeight - 18);
       node.style.left = `${safeLeft}px`;
       node.style.top = `${safeTop}px`;
       node.style.right = "auto";
@@ -1179,7 +1811,7 @@
     }
 
     function buildFlowPath(flowId) {
-      const [sourceId, targetId] = flowPairs[flowId];
+      const [sourceId, targetId] = activeFlowPairs()[flowId];
       const source = nodeBox(sourceId);
       const target = nodeBox(targetId);
       const dx = target.cx - source.cx;
@@ -1214,8 +1846,9 @@
     }
 
     function updateFlowPath(flowId) {
-      const flow = document.querySelector(`.flow[data-flow="${flowId}"]`);
-      const label = document.querySelector(`.flow-label[data-flow="${flowId}"]`);
+      const canvasEl = activeCanvas();
+      const flow = canvasEl.querySelector(`.flow[data-flow="${flowId}"]`);
+      const label = canvasEl.querySelector(`.flow-label[data-flow="${flowId}"]`);
       const path = buildFlowPath(flowId);
       const d = pathToString(path);
       flow.querySelectorAll("path").forEach((pathEl) => {
@@ -1230,8 +1863,8 @@
 
     function updateAllFlows() {
       const size = canvasSize();
-      flowSvg.setAttribute("viewBox", `0 0 ${size.width} ${size.height}`);
-      Object.keys(flowPairs).forEach(updateFlowPath);
+      activeFlowSvg().setAttribute("viewBox", `0 0 ${size.width} ${size.height}`);
+      Object.keys(activeFlowPairs()).forEach(updateFlowPath);
     }
 
     function centerDefaultLayout() {
@@ -1240,13 +1873,34 @@
         x: Math.min(size.width, window.innerWidth) / 2,
         y: Math.min(size.height, window.innerHeight) / 2
       };
-      const offsets = {
-        ra: { x: -455, y: -10 },
-        ca: { x: 0, y: -20 },
-        ocsp: { x: 455, y: -10 },
-        kmc: { x: 0, y: 265 }
-      };
-      const draft = Object.fromEntries(productNodes.map((node) => {
+
+      if (currentView === "cloud") {
+        const topRow = ["cloud-tenant", "cloud-tenant-nginx", "cloud-tenant-ca", "cloud-unified-nginx", "cloud-manage-nginx"].map((id) => productNodeMap[id]);
+        const topWidth = topRow.reduce((sum, node) => sum + node.offsetWidth, 0);
+        const horizontalRoom = Math.min(size.width, window.innerWidth) - 96;
+        const topGap = clamp((horizontalRoom - topWidth) / (topRow.length - 1), 58, 112);
+        let left = center.x - (topWidth + topGap * (topRow.length - 1)) / 2;
+        topRow.forEach((node) => {
+          setNodePosition(node, left, 154);
+          left += node.offsetWidth + topGap;
+        });
+
+        const adminNode = productNodeMap["cloud-admin"];
+        const adminWebNode = productNodeMap["cloud-admin-web"];
+        const dbNode = productNodeMap["cloud-db"];
+        const secondGap = clamp(topGap + 54, 128, 180);
+        const secondWidth = adminNode.offsetWidth + secondGap + adminWebNode.offsetWidth;
+        const secondLeft = center.x - secondWidth / 2 + clamp(topGap, 58, 112);
+        const secondTop = clamp(size.height * 0.43, 352, 408);
+        setNodePosition(adminNode, secondLeft, secondTop);
+        setNodePosition(adminWebNode, secondLeft + adminNode.offsetWidth + secondGap, secondTop);
+        setNodePosition(dbNode, secondLeft + adminNode.offsetWidth + secondGap / 2 - dbNode.offsetWidth / 2, clamp(size.height * 0.69, 560, 648));
+        updateAllFlows();
+        return;
+      }
+
+      const offsets = viewLayouts[currentView];
+      const draft = Object.fromEntries(activeProductNodes().map((node) => {
         const id = node.dataset.product;
         return [id, {
           node,
@@ -1269,9 +1923,10 @@
     }
 
     function clientToCanvasPoint(event) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = rect.width / canvas.offsetWidth;
-      const scaleY = rect.height / canvas.offsetHeight;
+      const canvasEl = activeCanvas();
+      const rect = canvasEl.getBoundingClientRect();
+      const scaleX = rect.width / canvasEl.offsetWidth;
+      const scaleY = rect.height / canvasEl.offsetHeight;
       return {
         x: (event.clientX - rect.left) / scaleX,
         y: (event.clientY - rect.top) / scaleY
@@ -1390,6 +2045,9 @@
     }
 
     function closeDetail() {
+      if (modal.hidden) {
+        return;
+      }
       modal.hidden = true;
       modalContent.innerHTML = "";
       if (lastActiveElement && typeof lastActiveElement.focus === "function") {
@@ -1402,6 +2060,27 @@
         event.preventDefault();
         callback();
       }
+    }
+
+    function setView(view) {
+      currentView = view;
+      const meta = viewMeta[view];
+      canvases.forEach((canvasEl) => {
+        canvasEl.hidden = canvasEl.dataset.view !== view;
+      });
+      pageTitle.textContent = meta.title;
+      pageSubtitle.textContent = meta.subtitle;
+      viewToggle.textContent = meta.toggle;
+      viewToggle.setAttribute("aria-pressed", String(view === "cloud"));
+      legendCert.textContent = meta.legend[0];
+      legendStatus.textContent = meta.legend[1];
+      legendKey.textContent = meta.legend[2];
+      legendExtra.textContent = meta.legend[3] || "";
+      legendItems.forEach((item, index) => {
+        item.hidden = index >= meta.legend.length;
+        item.className = `legend-item ${meta.legendClasses[index] || ""}`.trim();
+      });
+      centerDefaultLayout();
     }
 
     productNodes.forEach((el) => {
@@ -1419,6 +2098,11 @@
         openDetail(detail, "product");
       });
       el.addEventListener("keydown", (event) => openFromKeyboard(event, () => openDetail(detail, "product")));
+    });
+
+    viewToggle.addEventListener("click", () => {
+      closeDetail();
+      setView(currentView === "classic" ? "cloud" : "classic");
     });
 
     [...flowGroups, ...flowLabels].forEach((el) => {
