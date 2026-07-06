@@ -280,6 +280,7 @@
       line-height: 1;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       pointer-events: none;
+      animation: badgePulse 3s ease-out infinite;
     }
 
     .node:hover,
@@ -450,6 +451,7 @@
       overflow: hidden;
       cursor: pointer;
       transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      animation: badgePulse 3s ease-out infinite;
     }
 
     .flow-label::before {
@@ -817,6 +819,47 @@
     @keyframes dashFlow {
       to {
         stroke-dashoffset: -64;
+      }
+    }
+
+    @keyframes badgePulse {
+      0%,
+      100% {
+        opacity: 0.9;
+        box-shadow:
+          0 10px 24px rgba(0, 0, 0, 0.34),
+          0 0 6px 1px color-mix(in srgb, currentColor 18%, transparent),
+          0 0 16px 5px color-mix(in srgb, currentColor 6%, transparent);
+      }
+      10% {
+        opacity: 1;
+        box-shadow:
+          0 10px 24px rgba(0, 0, 0, 0.34),
+          0 0 14px 5px color-mix(in srgb, currentColor 34%, transparent),
+          0 0 34px 14px color-mix(in srgb, currentColor 15%, transparent),
+          0 0 62px 26px color-mix(in srgb, currentColor 6%, transparent);
+      }
+      27% {
+        opacity: 1;
+        box-shadow:
+          0 10px 24px rgba(0, 0, 0, 0.34),
+          0 0 14px 5px color-mix(in srgb, currentColor 34%, transparent),
+          0 0 34px 14px color-mix(in srgb, currentColor 15%, transparent),
+          0 0 62px 26px color-mix(in srgb, currentColor 6%, transparent);
+      }
+      40% {
+        opacity: 0.9;
+        box-shadow:
+          0 10px 24px rgba(0, 0, 0, 0.34),
+          0 0 6px 1px color-mix(in srgb, currentColor 18%, transparent),
+          0 0 16px 5px color-mix(in srgb, currentColor 6%, transparent);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .node::after,
+      .flow-label {
+        animation: none;
       }
     }
 
