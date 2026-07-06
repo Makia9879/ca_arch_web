@@ -190,11 +190,37 @@
       pointer-events: none;
     }
 
+    .node::after {
+      content: "!";
+      position: absolute;
+      top: -11px;
+      right: -11px;
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 1px solid color-mix(in srgb, currentColor 58%, transparent);
+      background: rgba(12, 17, 23, 0.9);
+      color: currentColor;
+      font-size: 14px;
+      font-weight: 860;
+      line-height: 1;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      pointer-events: none;
+    }
+
     .node:hover,
     .node:focus-visible {
       border-color: color-mix(in srgb, currentColor 58%, transparent);
       box-shadow: 0 22px 58px rgba(0, 0, 0, 0.42), 0 0 0 1px color-mix(in srgb, currentColor 24%, transparent);
       outline: none;
+    }
+
+    .node:hover::after,
+    .node:focus-visible::after {
+      border-color: currentColor;
+      background: rgba(17, 26, 36, 0.96);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34), 0 0 14px color-mix(in srgb, currentColor 22%, transparent);
     }
 
     .node.dragging {
@@ -295,12 +321,12 @@
       z-index: 5;
       display: grid;
       place-items: center;
-      width: 34px;
-      height: 34px;
+      width: 28px;
+      height: 28px;
       border: 1px solid color-mix(in srgb, currentColor 64%, transparent);
       background: rgba(12, 17, 23, 0.88);
       color: var(--text);
-      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
       overflow: hidden;
       cursor: pointer;
       transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
@@ -310,10 +336,10 @@
       content: "!";
       display: grid;
       place-items: center;
-      width: 34px;
-      height: 34px;
+      width: 28px;
+      height: 28px;
       color: currentColor;
-      font-size: 20px;
+      font-size: 15px;
       font-weight: 860;
       line-height: 1;
     }
@@ -346,7 +372,7 @@
     .flow-label.active {
       background: rgba(17, 26, 36, 0.96);
       border-color: currentColor;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38), 0 0 18px color-mix(in srgb, currentColor 24%, transparent);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.36), 0 0 14px color-mix(in srgb, currentColor 24%, transparent);
       transform: translateY(-2px);
       cursor: pointer;
     }
@@ -368,7 +394,7 @@
 
     .legend {
       position: absolute;
-      right: 42px;
+      right: 104px;
       top: 32px;
       z-index: 6;
       display: flex;
@@ -403,6 +429,52 @@
 
     .legend-item.key {
       color: var(--key);
+    }
+
+    .github-link {
+      position: absolute;
+      top: 28px;
+      right: 42px;
+      z-index: 7;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(222, 235, 250, 0.16);
+      background: rgba(12, 17, 23, 0.78);
+      color: var(--text);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+      transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .github-link:hover,
+    .github-link:focus-visible {
+      border-color: rgba(237, 244, 255, 0.72);
+      background: rgba(17, 26, 36, 0.96);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38), 0 0 16px rgba(237, 244, 255, 0.16);
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .github-link svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .drag-hint {
+      position: absolute;
+      right: 42px;
+      bottom: 34px;
+      z-index: 7;
+      border: 1px solid rgba(222, 235, 250, 0.14);
+      background: rgba(12, 17, 23, 0.72);
+      color: #c6d4e3;
+      padding: 9px 12px;
+      font-size: 12px;
+      line-height: 1;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      pointer-events: none;
     }
 
     .detail-modal {
@@ -621,11 +693,19 @@
       <p>证书业务、状态同步与密钥服务之间的数据流关系</p>
     </section>
 
+    <a class="github-link" href="https://github.com/makia9879" target="_blank" rel="noopener noreferrer" aria-label="打开 GitHub 主页" title="GitHub">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path d="M8 0C3.58 0 0 3.67 0 8.2c0 3.62 2.29 6.69 5.47 7.78.4.08.55-.18.55-.4 0-.2-.01-.86-.01-1.56-2.01.38-2.53-.5-2.69-.96-.09-.24-.48-.96-.82-1.15-.28-.16-.68-.55-.01-.56.63-.01 1.08.59 1.23.84.72 1.24 1.87.89 2.33.68.07-.53.28-.89.51-1.09-1.78-.21-3.64-.91-3.64-4.04 0-.89.31-1.62.82-2.19-.08-.21-.36-1.04.08-2.16 0 0 .67-.22 2.2.84A7.32 7.32 0 0 1 8 3.95c.68 0 1.36.09 1.99.28 1.53-1.06 2.2-.84 2.2-.84.44 1.12.16 1.95.08 2.16.51.57.82 1.3.82 2.19 0 3.14-1.87 3.83-3.65 4.04.29.26.54.75.54 1.52 0 1.09-.01 1.97-.01 2.24 0 .22.15.48.55.4A8.12 8.12 0 0 0 16 8.2C16 3.67 12.42 0 8 0Z"></path>
+      </svg>
+    </a>
+
     <section class="legend" aria-label="数据流图例">
       <div class="legend-item cert"><span class="legend-line"></span><span>证书业务</span></div>
       <div class="legend-item status"><span class="legend-line"></span><span>状态服务</span></div>
       <div class="legend-item key"><span class="legend-line"></span><span>密钥服务</span></div>
     </section>
+
+    <div class="drag-hint" aria-hidden="true">产品卡片可拖动移动</div>
 
     <div class="canvas" aria-label="产品架构画布">
       <svg class="flow-svg" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-label="产品之间的数据联通关系">
