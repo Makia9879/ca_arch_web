@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RA CA OCSP KMC Architecture</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c1117;
+      --panel: #121922;
+      --panel-strong: #18222f;
+      --text: #edf4ff;
+      --muted: #8fa2b6;
+      --line: rgba(210, 225, 242, 0.24);
+      --ra: #7cb7ff;
+      --ca: #ffbd66;
+      --ocsp: #74d897;
+      --kmc: #b797ff;
+      --cert: #62a8ff;
+      --status: #76d98b;
+      --key: #b891ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        radial-gradient(circle at 50% 44%, rgba(68, 119, 188, 0.18), transparent 42%),
+        var(--bg);
+      background-size: 32px 32px, 32px 32px, auto, auto;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    .shell {
+      position: relative;
+      width: max(100vw, 1040px);
+      height: max(100vh, 760px);
+      padding: 34px 42px;
+      transform-origin: top left;
+    }
+
+    .title {
+      position: absolute;
+      top: 30px;
+      left: 42px;
+      z-index: 3;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 780;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .canvas {
+      position: absolute;
+      inset: 0;
+    }
+
+    .flow-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      overflow: visible;
+    }
+
+    .flow-hit {
+      fill: none;
+      stroke: currentColor;
+      opacity: 0.02;
+      stroke-width: 28;
+      cursor: pointer;
+      pointer-events: stroke;
+    }
+
+    .flow-base {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .flow-glow {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 12 20;
+      opacity: 0.72;
+      filter: url(#softGlow);
+      animation: dashFlow 1.8s linear infinite;
+    }
+
+    .flow-core {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1 13;
+      opacity: 0.9;
+      animation: dashFlow 0.9s linear infinite;
+    }
+
+    .flow.cert {
+      color: var(--cert);
+    }
+
+    .flow.status {
+      color: var(--status);
+    }
+
+    .flow.key {
+      color: var(--key);
+    }
+
+    .flow,
+    .flow-hit {
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .flow:focus,
+    .flow:focus-visible,
+    .flow-hit:focus,
+    .flow-hit:focus-visible {
+      outline: none;
+    }
+
+    .flow:hover .flow-base,
+    .flow.active .flow-base {
+      stroke: currentColor;
+      opacity: 0.45;
+    }
+
+    .flow:hover .flow-glow,
+    .flow.active .flow-glow {
+      stroke-width: 4;
+      opacity: 1;
+    }
+
+    .flow-dot {
+      fill: currentColor;
+      filter: url(#dotGlow);
+    }
+
+    .node {
+      position: absolute;
+      z-index: 4;
+      width: 244px;
+      min-height: 126px;
+      border: 1px solid rgba(222, 235, 250, 0.16);
+      background: linear-gradient(180deg, rgba(24, 34, 47, 0.94), rgba(13, 19, 27, 0.96));
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+      padding: 18px 18px 16px;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .node::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-top: 4px solid currentColor;
+      opacity: 0.95;
+      pointer-events: none;
+    }
+
+    .node:hover,
+    .node:focus-visible {
+      border-color: color-mix(in srgb, currentColor 58%, transparent);
+      box-shadow: 0 22px 58px rgba(0, 0, 0, 0.42), 0 0 0 1px color-mix(in srgb, currentColor 24%, transparent);
+      outline: none;
+    }
+
+    .node.dragging {
+      z-index: 8;
+      cursor: grabbing;
+      border-color: currentColor;
+      box-shadow: 0 26px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px color-mix(in srgb, currentColor 38%, transparent);
+      transition: none;
+    }
+
+    .node.ra {
+      color: var(--ra);
+    }
+
+    .node.ca {
+      width: 270px;
+      min-height: 150px;
+      color: var(--ca);
+    }
+
+    .node.ocsp {
+      color: var(--ocsp);
+    }
+
+    .node.kmc {
+      width: 270px;
+      color: var(--kmc);
+    }
+
+    .node-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .node-mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid currentColor;
+      background: color-mix(in srgb, currentColor 15%, transparent);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .node h2 {
+      margin: 0;
+      color: var(--text);
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .node .name {
+      margin-top: 5px;
+      color: color-mix(in srgb, currentColor 70%, #ffffff);
+      font-size: 12px;
+      font-weight: 680;
+    }
+
+    .node p {
+      margin: 0;
+      color: #b4c2d1;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .node ul {
+      display: grid;
+      gap: 8px;
+      margin: 15px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .node li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #d8e3ef;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .node li::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: currentColor;
+      flex: 0 0 auto;
+    }
+
+    .flow-label {
+      position: absolute;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid color-mix(in srgb, currentColor 64%, transparent);
+      background: rgba(12, 17, 23, 0.88);
+      color: var(--text);
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .flow-label::before {
+      content: "!";
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      color: currentColor;
+      font-size: 20px;
+      font-weight: 860;
+      line-height: 1;
+    }
+
+    .flow-label span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .flow-label.cert {
+      color: var(--cert);
+    }
+
+    .flow-label.status {
+      color: var(--status);
+    }
+
+    .flow-label.key {
+      color: var(--key);
+    }
+
+    .flow-label:hover,
+    .flow-label.active {
+      background: rgba(17, 26, 36, 0.96);
+      border-color: currentColor;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38), 0 0 18px color-mix(in srgb, currentColor 24%, transparent);
+      transform: translateY(-2px);
+      cursor: pointer;
+    }
+
+    .label-ra-ca {
+      left: 29%;
+      top: 43%;
+    }
+
+    .label-ca-ocsp {
+      right: 28%;
+      top: 43%;
+    }
+
+    .label-ca-kmc {
+      left: 64%;
+      top: 66%;
+    }
+
+    .legend {
+      position: absolute;
+      right: 42px;
+      top: 32px;
+      z-index: 6;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border: 1px solid rgba(222, 235, 250, 0.12);
+      background: rgba(12, 17, 23, 0.72);
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 3px;
+      background: currentColor;
+    }
+
+    .legend-item.cert {
+      color: var(--cert);
+    }
+
+    .legend-item.status {
+      color: var(--status);
+    }
+
+    .legend-item.key {
+      color: var(--key);
+    }
+
+    .detail-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 34px 42px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--modal-accent, var(--cert)) 22%, transparent), transparent 31%),
+        rgba(7, 11, 16, 0.96);
+      background-size: 32px 32px, 32px 32px, auto, auto;
+      color: var(--text);
+    }
+
+    .detail-modal[hidden] {
+      display: none;
+    }
+
+    .modal-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid rgba(222, 235, 250, 0.14);
+      padding-bottom: 24px;
+    }
+
+    .modal-kicker {
+      margin: 0 0 12px;
+      color: var(--modal-accent, var(--cert));
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 68px);
+      line-height: 0.95;
+      font-weight: 820;
+      letter-spacing: 0;
+    }
+
+    .modal-subtitle {
+      margin: 18px 0 0;
+      max-width: 760px;
+      color: #bdcad8;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .modal-close {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border: 1px solid rgba(222, 235, 250, 0.22);
+      background: rgba(18, 25, 34, 0.82);
+      color: var(--text);
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .modal-close:hover,
+    .modal-close:focus-visible {
+      border-color: var(--modal-accent, var(--cert));
+      outline: none;
+    }
+
+    .modal-content {
+      display: grid;
+      align-content: start;
+      gap: 22px;
+      overflow: auto;
+      padding: 28px 2px 8px;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .modal-card {
+      border: 1px solid rgba(222, 235, 250, 0.14);
+      background: linear-gradient(180deg, rgba(24, 34, 47, 0.88), rgba(12, 18, 26, 0.9));
+      padding: 18px;
+      min-height: 164px;
+    }
+
+    .modal-card strong {
+      display: block;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .modal-card p {
+      margin: 10px 0 0;
+      color: #aebccd;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .modal-list {
+      display: grid;
+      gap: 9px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .modal-list li {
+      display: grid;
+      grid-template-columns: 7px 1fr;
+      gap: 9px;
+      color: #dce7f4;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .modal-list li::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-top: 6px;
+      background: var(--modal-accent, var(--cert));
+    }
+
+    .modal-wide {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.72fr) 1.28fr;
+      gap: 16px;
+    }
+
+    .modal-flow-summary {
+      border-left: 4px solid var(--modal-accent, var(--cert));
+    }
+
+    .modal-methods {
+      display: grid;
+      gap: 12px;
+    }
+
+    .method-row {
+      display: grid;
+      grid-template-columns: 145px 1fr;
+      gap: 16px;
+      border: 1px solid rgba(222, 235, 250, 0.13);
+      background: rgba(12, 18, 26, 0.72);
+      padding: 14px;
+    }
+
+    .method-row span {
+      color: var(--modal-accent, var(--cert));
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .method-row p {
+      margin: 0;
+      color: #dce7f4;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @keyframes dashFlow {
+      to {
+        stroke-dashoffset: -64;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .shell {
+        transform: scale(calc(100vw / 1040));
+        height: calc(760px / (100vw / 1040));
+      }
+
+      .detail-modal {
+        padding: 26px;
+      }
+    }
+
+    @media (max-height: 760px) and (min-width: 1101px) {
+      .shell {
+        transform: scale(calc(100vh / 760));
+        width: calc(100vw / (100vh / 760));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .modal-grid,
+      .modal-wide {
+        grid-template-columns: 1fr;
+      }
+
+      .method-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .modal-title {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="title" aria-label="架构图标题">
+      <h1>RA / CA / OCSP / KMC 产品联通架构</h1>
+      <p>证书业务、状态同步与密钥服务之间的数据流关系</p>
+    </section>
+
+    <section class="legend" aria-label="数据流图例">
+      <div class="legend-item cert"><span class="legend-line"></span><span>证书业务</span></div>
+      <div class="legend-item status"><span class="legend-line"></span><span>状态服务</span></div>
+      <div class="legend-item key"><span class="legend-line"></span><span>密钥服务</span></div>
+    </section>
+
+    <div class="canvas" aria-label="产品架构画布">
+      <svg class="flow-svg" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-label="产品之间的数据联通关系">
+        <defs>
+          <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="dotGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <marker id="arrow-cert" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#62a8ff"></path>
+          </marker>
+          <marker id="arrow-status" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#76d98b"></path>
+          </marker>
+          <marker id="arrow-key" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#b891ff"></path>
+          </marker>
+        </defs>
+
+        <g class="flow cert" data-flow="ra-ca" role="button" tabindex="0" aria-label="查看 RA 和 CA 联动详情">
+          <path id="path-ra-ca" class="flow-base" d="M 320 400 C 430 350, 545 350, 650 395" marker-end="url(#arrow-cert)"></path>
+          <path class="flow-glow" d="M 320 400 C 430 350, 545 350, 650 395"></path>
+          <path class="flow-core" d="M 320 400 C 430 350, 545 350, 650 395"></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.8s" repeatCount="indefinite" path="M 320 400 C 430 350, 545 350, 650 395"></animateMotion></circle>
+          <path class="flow-hit" d="M 320 400 C 430 350, 545 350, 650 395"></path>
+        </g>
+
+        <g class="flow status" data-flow="ca-ocsp" role="button" tabindex="0" aria-label="查看 CA 和 OCSP 联动详情">
+          <path class="flow-base" d="M 790 395 C 900 350, 1010 350, 1120 400" marker-end="url(#arrow-status)"></path>
+          <path class="flow-glow" d="M 790 395 C 900 350, 1010 350, 1120 400"></path>
+          <path class="flow-core" d="M 790 395 C 900 350, 1010 350, 1120 400"></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.5s" repeatCount="indefinite" path="M 790 395 C 900 350, 1010 350, 1120 400"></animateMotion></circle>
+          <path class="flow-hit" d="M 790 395 C 900 350, 1010 350, 1120 400"></path>
+        </g>
+
+        <g class="flow key" data-flow="ca-kmc" role="button" tabindex="0" aria-label="查看 CA 和 KMC 联动详情">
+          <path class="flow-base" d="M 790 500 C 990 545, 1035 650, 875 735" marker-end="url(#arrow-key)"></path>
+          <path class="flow-glow" d="M 790 500 C 990 545, 1035 650, 875 735"></path>
+          <path class="flow-core" d="M 790 500 C 990 545, 1035 650, 875 735"></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.2s" repeatCount="indefinite" path="M 790 500 C 990 545, 1035 650, 875 735"></animateMotion></circle>
+          <path class="flow-hit" d="M 790 500 C 990 545, 1035 650, 875 735"></path>
+        </g>
+
+      </svg>
+
+      <article class="node ra" data-product="ra" role="button" tabindex="0" aria-label="查看 RA 产品功能模块">
+        <div class="node-head">
+          <div class="node-mark">RA</div>
+          <div>
+            <h2>RA</h2>
+            <div class="name">Registration Authority</div>
+          </div>
+        </div>
+        <p>面向业务受理侧，承接用户身份、证书申请、审核与下载入口。</p>
+        <ul>
+          <li>申请材料与 CSR 受理</li>
+          <li>审核状态回传</li>
+          <li>证书查询与联调入口</li>
+        </ul>
+      </article>
+
+      <article class="node ca" data-product="ca" role="button" tabindex="0" aria-label="查看 CA 产品功能模块">
+        <div class="node-head">
+          <div class="node-mark">CA</div>
+          <div>
+            <h2>CA</h2>
+            <div class="name">Certificate Authority</div>
+          </div>
+        </div>
+        <p>证书生命周期核心，负责签发、更新、吊销、发布状态与对接密钥服务。</p>
+        <ul>
+          <li>根 / 子 CA 与用户证书签发</li>
+          <li>证书状态与吊销数据管理</li>
+          <li>OCSP / KMC 业务协同</li>
+        </ul>
+      </article>
+
+      <article class="node ocsp" data-product="ocsp" role="button" tabindex="0" aria-label="查看 OCSP 产品功能模块">
+        <div class="node-head">
+          <div class="node-mark">OC</div>
+          <div>
+            <h2>OCSP</h2>
+            <div class="name">Online Certificate Status Protocol</div>
+          </div>
+        </div>
+        <p>对外提供证书状态查询能力，消费 CA 同步的状态数据并完成响应签名。</p>
+        <ul>
+          <li>状态查询与响应生成</li>
+          <li>CA 状态数据同步</li>
+          <li>响应签名证书管理</li>
+        </ul>
+      </article>
+
+      <article class="node kmc" data-product="kmc" role="button" tabindex="0" aria-label="查看 KMC 产品功能模块">
+        <div class="node-head">
+          <div class="node-mark">KM</div>
+          <div>
+            <h2>KMC</h2>
+            <div class="name">Key Management Center</div>
+          </div>
+        </div>
+        <p>提供密钥托管、恢复、CAKM 响应与加密材料流转能力。</p>
+        <ul>
+          <li>密钥托管与恢复</li>
+          <li>CAKM 业务处理</li>
+          <li>证书 / 响应签名密钥支撑</li>
+        </ul>
+      </article>
+
+      <div class="flow-label cert label-ra-ca" data-code="!" data-flow="ra-ca" role="button" tabindex="0" aria-label="点击查看 RA 和 CA 联动详情" title="点击查看 RA 和 CA 联动详情">
+        <span>RA ⇄ CA：证书申请、审核结果、证书下载</span>
+      </div>
+      <div class="flow-label status label-ca-ocsp" data-code="!" data-flow="ca-ocsp" role="button" tabindex="0" aria-label="点击查看 CA 和 OCSP 联动详情" title="点击查看 CA 和 OCSP 联动详情">
+        <span>CA ⇄ OCSP：吊销状态、证书状态同步、OCSP 配置</span>
+      </div>
+      <div class="flow-label key label-ca-kmc" data-code="!" data-flow="ca-kmc" role="button" tabindex="0" aria-label="点击查看 CA 和 KMC 联动详情" title="点击查看 CA 和 KMC 联动详情">
+        <span>CA ⇄ KMC：CAKM、密钥托管、密钥恢复</span>
+      </div>
+    </div>
+  </main>
+
+  <section class="detail-modal" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="modal-topbar">
+      <div>
+        <p class="modal-kicker" id="modal-kicker"></p>
+        <h2 class="modal-title" id="modal-title"></h2>
+        <p class="modal-subtitle" id="modal-subtitle"></p>
+      </div>
+      <button class="modal-close" type="button" id="modal-close" aria-label="关闭详情弹窗">×</button>
+    </div>
+    <div class="modal-content" id="modal-content"></div>
+  </section>
+
+  <script>
+    const productDetails = {
+      ra: {
+        kicker: "产品功能模块",
+        title: "RA / Registration Authority",
+        subtitle: "RA 位于业务受理侧，负责把用户、机构、审核流程和证书生命周期动作组织成可追踪的申请入口。",
+        accent: "#7cb7ff",
+        modules: [
+          {
+            name: "业务受理",
+            desc: "承接用户或业务系统提交的证书相关申请。",
+            items: ["用户与机构身份建档", "证书申请、更新、吊销、下载入口", "CSR 与申请材料格式校验"]
+          },
+          {
+            name: "审核审批",
+            desc: "围绕证书业务形成可追踪的人工或自动审核流程。",
+            items: ["申请流转与审批节点控制", "审核通过、驳回、补正状态回传", "关键操作审计留痕"]
+          },
+          {
+            name: "证书服务门户",
+            desc: "面向业务人员和调用方提供证书结果查询能力。",
+            items: ["证书查询、下载、状态查看", "证书模板与策略选择", "联调入口与业务对账"]
+          },
+          {
+            name: "系统管理",
+            desc: "管理 RA 自身的租户、权限、接口和运行审计。",
+            items: ["机构、用户、角色管理", "接口权限与访问控制", "日志、报表与运行配置"]
+          }
+        ]
+      },
+      ca: {
+        kicker: "产品功能模块",
+        title: "CA / Certificate Authority",
+        subtitle: "CA 是证书生命周期核心，负责 CA 体系、证书签发、吊销发布、状态数据和外部产品协同。",
+        accent: "#ffbd66",
+        modules: [
+          {
+            name: "CA 体系管理",
+            desc: "维护根 CA、子 CA 及其证书、策略和信任链。",
+            items: ["根 CA / 子 CA 生命周期管理", "CA 证书、策略、模板维护", "证书链与发布配置"]
+          },
+          {
+            name: "证书签发中心",
+            desc: "处理用户证书的签发、更新、吊销和结果发布。",
+            items: ["用户证书签发与更新", "吊销、冻结、恢复等状态变更", "批量任务与签发结果管理"]
+          },
+          {
+            name: "状态与合规",
+            desc: "把证书状态变更沉淀为可同步、可审计的数据。",
+            items: ["吊销状态与序列号数据管理", "CRL / 状态发布", "操作审计、归档与报表"]
+          },
+          {
+            name: "外部集成",
+            desc: "对接 RA、OCSP、KMC 等产品，形成完整证书业务链路。",
+            items: ["RA 受理接口与结果回传", "OCSP 状态同步", "KMC / CAKM 密钥服务对接"]
+          }
+        ]
+      },
+      ocsp: {
+        kicker: "产品功能模块",
+        title: "OCSP / Online Certificate Status Protocol",
+        subtitle: "OCSP 对外提供证书状态查询能力，消费 CA 同步的状态数据，并生成带签名的状态响应。",
+        accent: "#74d897",
+        modules: [
+          {
+            name: "状态响应服务",
+            desc: "接收证书状态查询请求并返回标准 OCSP 响应。",
+            items: ["OCSP 请求解析与校验", "有效、吊销、未知状态判定", "响应生成与签名"]
+          },
+          {
+            name: "状态数据同步",
+            desc: "从 CA 获取状态数据并维护可查询的本地状态视图。",
+            items: ["证书序列号与吊销数据接入", "增量同步与定时刷新", "状态有效期与缓存控制"]
+          },
+          {
+            name: "签名证书管理",
+            desc: "管理用于响应签名的证书、私钥引用和签名策略。",
+            items: ["响应签名证书维护", "Issuer 绑定与策略配置", "签名算法与证书链配置"]
+          },
+          {
+            name: "运维监控",
+            desc: "支撑高频状态查询场景下的可用性和可观测性。",
+            items: ["服务可用性与延迟监控", "请求日志与异常告警", "容量、缓存与发布状态检查"]
+          }
+        ]
+      },
+      kmc: {
+        kicker: "产品功能模块",
+        title: "KMC / Key Management Center",
+        subtitle: "KMC 管理密钥生成、托管、恢复和 CAKM 响应，向 CA 等系统提供受控的密钥服务。",
+        accent: "#b797ff",
+        modules: [
+          {
+            name: "密钥生命周期",
+            desc: "覆盖密钥从生成到归档、恢复、销毁的完整管理过程。",
+            items: ["密钥生成、导入、托管", "备份、恢复、轮换、销毁", "密钥状态与版本管理"]
+          },
+          {
+            name: "CAKM 服务",
+            desc: "响应 CA 发起的密钥管理请求，返回可验证的加密材料。",
+            items: ["CAKM 请求受理", "密钥封装与响应生成", "密钥恢复与托管结果回传"]
+          },
+          {
+            name: "HSM 对接",
+            desc: "通过密码设备完成密钥保护、签名、加解密等底层能力。",
+            items: ["HSM 设备通道与连接校验", "密钥索引与设备资源映射", "签名、加密、解密调用"]
+          },
+          {
+            name: "审计权限",
+            desc: "控制密钥相关操作的授权边界，并保留审计证据。",
+            items: ["角色、审批与权限隔离", "密钥访问控制策略", "操作日志与合规审计"]
+          }
+        ]
+      }
+    };
+
+    const flowDetails = {
+      "ra-ca": {
+        kicker: "产品联动详情",
+        title: "RA ⇄ CA",
+        subtitle: "RA 负责业务受理与审核入口，CA 负责证书签发与生命周期处理；两者之间围绕申请、审核、签发结果和证书下载形成闭环。",
+        accent: "#62a8ff",
+        summary: {
+          name: "联动边界",
+          desc: "RA 不直接完成签名签发，CA 不直接承接全部业务受理；RA 把合规后的申请提交给 CA，CA 把签发、更新、吊销处理结果返回 RA。",
+          items: ["证书申请、更新、吊销请求流转", "CSR、模板、主体信息、扩展项传递", "签发结果、证书序列号、下载地址回传", "审核状态、失败原因、操作审计对账"]
+        },
+        interactions: [
+          {
+            name: "申请提交",
+            desc: "RA 将用户申请材料和 CSR 提交给 CA，CA 按模板、策略和 CA 体系完成签发前校验。",
+            items: ["主体信息", "CSR / 公钥材料", "证书模板与扩展参数"]
+          },
+          {
+            name: "状态回传",
+            desc: "CA 把受理、签发、失败、吊销等结果同步回 RA，RA 展示给业务人员或调用方。",
+            items: ["业务单状态", "失败原因", "证书序列号与有效期"]
+          },
+          {
+            name: "证书交付",
+            desc: "签发完成后，RA 提供证书查询、下载和业务系统取证入口。",
+            items: ["PEM / DER 证书", "证书链", "下载凭证或查询条件"]
+          }
+        ],
+        methods: [
+          ["同步 API", "RA 发起证书业务请求，CA 同步返回受理结果或初步校验结果。"],
+          ["异步状态", "签发耗时或需要审批时，通过回调、轮询或任务状态同步最终结果。"],
+          ["结构化载荷", "主体、CSR、模板、扩展项、业务流水号等使用结构化字段传递，便于对账和审计。"],
+          ["审计对账", "RA 与 CA 以业务流水号、证书序列号、操作时间形成跨系统追踪链。"]
+        ]
+      },
+      "ca-ocsp": {
+        kicker: "产品联动详情",
+        title: "CA ⇄ OCSP",
+        subtitle: "CA 产生证书状态事实，OCSP 消费状态数据并对外提供低延迟查询；两者之间重点是吊销状态、Issuer 绑定和响应签名配置。",
+        accent: "#76d98b",
+        summary: {
+          name: "联动边界",
+          desc: "CA 是证书状态的权威来源，OCSP 是在线查询服务；OCSP 不决定证书生命周期，只按照 CA 同步的数据生成标准响应。",
+          items: ["证书有效、吊销、未知状态数据同步", "Issuer、CA 证书链和状态范围配置", "响应签名证书与策略同步", "状态发布时间、nextUpdate、缓存窗口协同"]
+        },
+        interactions: [
+          {
+            name: "状态数据同步",
+            desc: "CA 将证书序列号、吊销时间、吊销原因等状态事实同步给 OCSP。",
+            items: ["增量状态记录", "吊销原因", "状态更新时间"]
+          },
+          {
+            name: "查询能力发布",
+            desc: "OCSP 根据同步数据构建可查询视图，并对外提供标准 OCSP 响应。",
+            items: ["OCSP Responder 地址", "状态缓存", "响应有效期"]
+          },
+          {
+            name: "签名配置协同",
+            desc: "CA 与 OCSP 协同维护响应签名证书、Issuer 绑定和证书链信息。",
+            items: ["响应签名证书", "Issuer 证书", "签名算法策略"]
+          }
+        ],
+        methods: [
+          ["增量同步任务", "按时间戳、版本号或状态变更队列拉取 CA 侧最新状态。"],
+          ["管理 API", "同步 OCSP 服务配置、Issuer 绑定、响应签名证书和发布状态。"],
+          ["状态数据集", "以证书序列号、Issuer、状态、吊销原因、更新时间作为核心数据结构。"],
+          ["缓存窗口", "通过 thisUpdate / nextUpdate 与本地缓存策略控制响应新鲜度。"]
+        ]
+      },
+      "ca-kmc": {
+        kicker: "产品联动详情",
+        title: "CA ⇄ KMC",
+        subtitle: "CA 在证书业务中需要密钥托管、恢复或 CAKM 响应时对接 KMC；KMC 返回受控的密钥材料、索引或响应结果。",
+        accent: "#b891ff",
+        summary: {
+          name: "联动边界",
+          desc: "CA 发起证书与密钥相关业务编排，KMC 负责密钥管理与密码设备调用；密钥材料不应在链路中无控制地明文扩散。",
+          items: ["CAKM 请求与响应", "密钥托管、恢复、封装结果传递", "HSM 密钥索引、证书引用和设备通道协同", "密钥操作审计、失败重试和结果对账"]
+        },
+        interactions: [
+          {
+            name: "CAKM 业务",
+            desc: "CA 根据证书业务需要向 KMC 发起 CAKM 请求，KMC 完成密钥处理并返回响应。",
+            items: ["请求流水号", "证书或主体标识", "CAKM 响应载荷"]
+          },
+          {
+            name: "密钥托管恢复",
+            desc: "当业务涉及托管或恢复时，CA 与 KMC 共同维护密钥归属、状态和恢复结果。",
+            items: ["密钥标识", "托管状态", "恢复审批与结果"]
+          },
+          {
+            name: "密码设备协同",
+            desc: "KMC 屏蔽 HSM 细节，向 CA 返回可引用的密钥索引、证书引用或签名结果。",
+            items: ["HSM 设备通道", "密钥索引", "签名/加解密结果"]
+          }
+        ],
+        methods: [
+          ["安全服务调用", "CA 通过受控 API 或服务通道调用 KMC，不直接绕过 KMC 操作 HSM。"],
+          ["CAKM 结构", "请求与响应携带业务流水号、算法、密钥用途、证书引用和结果码。"],
+          ["密钥引用传递", "优先传递密钥 ID、HSM 索引或封装材料，减少明文密钥暴露面。"],
+          ["失败重试与审计", "对 KMC 调用超时、失败码、设备异常建立重试和跨系统审计链。"]
+        ]
+      }
+    };
+
+    const flowGroups = [...document.querySelectorAll(".flow")];
+    const flowLabels = [...document.querySelectorAll(".flow-label")];
+    const productNodes = [...document.querySelectorAll("[data-product]")];
+    const shell = document.querySelector(".shell");
+    const canvas = document.querySelector(".canvas");
+    const flowSvg = document.querySelector(".flow-svg");
+    const modal = document.querySelector("#detail-modal");
+    const modalKicker = document.querySelector("#modal-kicker");
+    const modalTitle = document.querySelector("#modal-title");
+    const modalSubtitle = document.querySelector("#modal-subtitle");
+    const modalContent = document.querySelector("#modal-content");
+    const modalClose = document.querySelector("#modal-close");
+    const productNodeMap = Object.fromEntries(productNodes.map((node) => [node.dataset.product, node]));
+    const flowPairs = {
+      "ra-ca": ["ra", "ca"],
+      "ca-ocsp": ["ca", "ocsp"],
+      "ca-kmc": ["ca", "kmc"]
+    };
+    let lastActiveElement = null;
+    let dragState = null;
+
+    function setActiveFlow(id, active) {
+      document.querySelectorAll(`[data-flow="${id}"]`).forEach((el) => {
+        el.classList.toggle("active", active);
+      });
+    }
+
+    function canvasSize() {
+      return {
+        width: canvas.offsetWidth,
+        height: canvas.offsetHeight
+      };
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function setNodePosition(node, left, top) {
+      const size = canvasSize();
+      const safeLeft = clamp(left, 18, size.width - node.offsetWidth - 18);
+      const safeTop = clamp(top, 96, size.height - node.offsetHeight - 18);
+      node.style.left = `${safeLeft}px`;
+      node.style.top = `${safeTop}px`;
+      node.style.right = "auto";
+      node.style.bottom = "auto";
+    }
+
+    function nodeBox(id) {
+      const node = productNodeMap[id];
+      const left = node.offsetLeft;
+      const top = node.offsetTop;
+      const width = node.offsetWidth;
+      const height = node.offsetHeight;
+      return {
+        left,
+        top,
+        right: left + width,
+        bottom: top + height,
+        width,
+        height,
+        cx: left + width / 2,
+        cy: top + height / 2
+      };
+    }
+
+    function cubicPoint(path, t) {
+      const mt = 1 - t;
+      const x = mt ** 3 * path.start.x + 3 * mt ** 2 * t * path.c1.x + 3 * mt * t ** 2 * path.c2.x + t ** 3 * path.end.x;
+      const y = mt ** 3 * path.start.y + 3 * mt ** 2 * t * path.c1.y + 3 * mt * t ** 2 * path.c2.y + t ** 3 * path.end.y;
+      return { x, y };
+    }
+
+    function pathToString(path) {
+      return `M ${path.start.x.toFixed(1)} ${path.start.y.toFixed(1)} C ${path.c1.x.toFixed(1)} ${path.c1.y.toFixed(1)}, ${path.c2.x.toFixed(1)} ${path.c2.y.toFixed(1)}, ${path.end.x.toFixed(1)} ${path.end.y.toFixed(1)}`;
+    }
+
+    function buildFlowPath(flowId) {
+      const [sourceId, targetId] = flowPairs[flowId];
+      const source = nodeBox(sourceId);
+      const target = nodeBox(targetId);
+      const dx = target.cx - source.cx;
+      const dy = target.cy - source.cy;
+
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        const side = dx >= 0 ? 1 : -1;
+        const start = { x: side > 0 ? source.right : source.left, y: source.cy };
+        const end = { x: side > 0 ? target.left : target.right, y: target.cy };
+        const spread = Math.max(70, Math.abs(end.x - start.x) * 0.42);
+        const lift = -Math.min(68, Math.max(28, Math.abs(end.x - start.x) * 0.12));
+        return {
+          start,
+          c1: { x: start.x + spread * side, y: start.y + lift },
+          c2: { x: end.x - spread * side, y: end.y + lift },
+          end
+        };
+      }
+
+      const verticalSide = dy >= 0 ? 1 : -1;
+      const start = { x: source.cx, y: verticalSide > 0 ? source.bottom : source.top };
+      const end = { x: target.cx, y: verticalSide > 0 ? target.top : target.bottom };
+      const spread = Math.max(60, Math.abs(end.y - start.y) * 0.36);
+      const bendSide = Math.abs(dx) > 20 ? Math.sign(dx) : 1;
+      const bend = clamp(Math.abs(dx) * 0.18 + 28, 28, 56) * bendSide;
+      return {
+        start,
+        c1: { x: start.x + bend, y: start.y + spread * verticalSide },
+        c2: { x: end.x - bend, y: end.y - spread * verticalSide },
+        end
+      };
+    }
+
+    function updateFlowPath(flowId) {
+      const flow = document.querySelector(`.flow[data-flow="${flowId}"]`);
+      const label = document.querySelector(`.flow-label[data-flow="${flowId}"]`);
+      const path = buildFlowPath(flowId);
+      const d = pathToString(path);
+      flow.querySelectorAll("path").forEach((pathEl) => {
+        pathEl.setAttribute("d", d);
+      });
+      const motion = flow.querySelector("animateMotion");
+      motion.setAttribute("path", d);
+      const labelPoint = cubicPoint(path, 0.52);
+      label.style.left = `${labelPoint.x - label.offsetWidth / 2}px`;
+      label.style.top = `${labelPoint.y - label.offsetHeight / 2}px`;
+    }
+
+    function updateAllFlows() {
+      const size = canvasSize();
+      flowSvg.setAttribute("viewBox", `0 0 ${size.width} ${size.height}`);
+      Object.keys(flowPairs).forEach(updateFlowPath);
+    }
+
+    function centerDefaultLayout() {
+      const size = canvasSize();
+      const center = {
+        x: Math.min(size.width, window.innerWidth) / 2,
+        y: Math.min(size.height, window.innerHeight) / 2
+      };
+      const offsets = {
+        ra: { x: -455, y: -10 },
+        ca: { x: 0, y: -20 },
+        ocsp: { x: 455, y: -10 },
+        kmc: { x: 0, y: 265 }
+      };
+      const draft = Object.fromEntries(productNodes.map((node) => {
+        const id = node.dataset.product;
+        return [id, {
+          node,
+          left: center.x + offsets[id].x - node.offsetWidth / 2,
+          top: center.y + offsets[id].y - node.offsetHeight / 2
+        }];
+      }));
+      const bounds = Object.values(draft).reduce((acc, item) => ({
+        left: Math.min(acc.left, item.left),
+        top: Math.min(acc.top, item.top),
+        right: Math.max(acc.right, item.left + item.node.offsetWidth),
+        bottom: Math.max(acc.bottom, item.top + item.node.offsetHeight)
+      }), { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
+      const shiftX = center.x - (bounds.left + bounds.right) / 2;
+      const shiftY = center.y - (bounds.top + bounds.bottom) / 2;
+      Object.values(draft).forEach((item) => {
+        setNodePosition(item.node, item.left + shiftX, item.top + shiftY);
+      });
+      updateAllFlows();
+    }
+
+    function clientToCanvasPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect.width / canvas.offsetWidth;
+      const scaleY = rect.height / canvas.offsetHeight;
+      return {
+        x: (event.clientX - rect.left) / scaleX,
+        y: (event.clientY - rect.top) / scaleY
+      };
+    }
+
+    function beginNodeDrag(event, node) {
+      if (event.button !== 0 || !modal.hidden) {
+        return;
+      }
+      const point = clientToCanvasPoint(event);
+      dragState = {
+        node,
+        pointerId: event.pointerId,
+        startX: point.x,
+        startY: point.y,
+        originLeft: node.offsetLeft,
+        originTop: node.offsetTop,
+        moved: false
+      };
+      node.classList.add("dragging");
+      node.setPointerCapture(event.pointerId);
+    }
+
+    function moveNodeDrag(event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) {
+        return;
+      }
+      const point = clientToCanvasPoint(event);
+      const dx = point.x - dragState.startX;
+      const dy = point.y - dragState.startY;
+      if (Math.abs(dx) + Math.abs(dy) > 4) {
+        dragState.moved = true;
+      }
+      setNodePosition(dragState.node, dragState.originLeft + dx, dragState.originTop + dy);
+      updateAllFlows();
+    }
+
+    function endNodeDrag(event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) {
+        return;
+      }
+      const { node, moved } = dragState;
+      node.classList.remove("dragging");
+      if (node.hasPointerCapture(event.pointerId)) {
+        node.releasePointerCapture(event.pointerId);
+      }
+      if (moved) {
+        node.dataset.dragged = "true";
+        window.setTimeout(() => {
+          delete node.dataset.dragged;
+        }, 180);
+      }
+      dragState = null;
+      updateAllFlows();
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function renderList(items) {
+      return `<ul class="modal-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+    }
+
+    function renderModuleCard(module) {
+      return `
+        <article class="modal-card">
+          <strong>${escapeHtml(module.name)}</strong>
+          <p>${escapeHtml(module.desc)}</p>
+          ${renderList(module.items)}
+        </article>
+      `;
+    }
+
+    function renderProductDetail(detail) {
+      return `<div class="modal-grid">${detail.modules.map(renderModuleCard).join("")}</div>`;
+    }
+
+    function renderFlowDetail(detail) {
+      return `
+        <div class="modal-wide">
+          <article class="modal-card modal-flow-summary">
+            <strong>${escapeHtml(detail.summary.name)}</strong>
+            <p>${escapeHtml(detail.summary.desc)}</p>
+            ${renderList(detail.summary.items)}
+          </article>
+          <div class="modal-grid">
+            ${detail.interactions.map(renderModuleCard).join("")}
+          </div>
+        </div>
+        <div class="modal-methods">
+          ${detail.methods.map(([name, desc]) => `
+            <div class="method-row">
+              <span>${escapeHtml(name)}</span>
+              <p>${escapeHtml(desc)}</p>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function openDetail(detail, type) {
+      lastActiveElement = document.activeElement;
+      modal.style.setProperty("--modal-accent", detail.accent);
+      modalKicker.textContent = detail.kicker;
+      modalTitle.textContent = detail.title;
+      modalSubtitle.textContent = detail.subtitle;
+      modalContent.innerHTML = type === "flow" ? renderFlowDetail(detail) : renderProductDetail(detail);
+      modal.hidden = false;
+      modalClose.focus();
+    }
+
+    function closeDetail() {
+      modal.hidden = true;
+      modalContent.innerHTML = "";
+      if (lastActiveElement && typeof lastActiveElement.focus === "function") {
+        lastActiveElement.focus();
+      }
+    }
+
+    function openFromKeyboard(event, callback) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        callback();
+      }
+    }
+
+    productNodes.forEach((el) => {
+      const detail = productDetails[el.dataset.product];
+      el.addEventListener("pointerdown", (event) => beginNodeDrag(event, el));
+      el.addEventListener("pointermove", moveNodeDrag);
+      el.addEventListener("pointerup", endNodeDrag);
+      el.addEventListener("pointercancel", endNodeDrag);
+      el.addEventListener("click", (event) => {
+        if (el.dataset.dragged === "true") {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        openDetail(detail, "product");
+      });
+      el.addEventListener("keydown", (event) => openFromKeyboard(event, () => openDetail(detail, "product")));
+    });
+
+    [...flowGroups, ...flowLabels].forEach((el) => {
+      const id = el.dataset.flow;
+      el.addEventListener("mouseenter", () => setActiveFlow(id, true));
+      el.addEventListener("mouseleave", () => setActiveFlow(id, false));
+      el.addEventListener("pointerenter", () => setActiveFlow(id, true));
+      el.addEventListener("pointerleave", () => setActiveFlow(id, false));
+      el.addEventListener("focusin", () => setActiveFlow(id, true));
+      el.addEventListener("focusout", () => setActiveFlow(id, false));
+      el.addEventListener("click", () => openDetail(flowDetails[id], "flow"));
+      el.addEventListener("keydown", (event) => openFromKeyboard(event, () => openDetail(flowDetails[id], "flow")));
+    });
+
+    modalClose.addEventListener("click", closeDetail);
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closeDetail();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !modal.hidden) {
+        closeDetail();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      centerDefaultLayout();
+    });
+
+    requestAnimationFrame(centerDefaultLayout);
+  </script>
+</body>
+</html>
