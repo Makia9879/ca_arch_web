@@ -11,7 +11,7 @@
 - RA 表示注册审核侧产品对象，负责证书申请、审核流转和业务入口。
 - CA 表示证书签发核心产品对象，负责证书生命周期、状态发布和外部产品协同。
 - OCSP 表示在线证书状态服务产品对象，负责状态查询、响应生成和响应签名。
-- KMC 表示密钥管理中心产品对象，负责密钥托管、密钥恢复、CAKM 响应和 HSM 能力封装。
+- KMC 表示密钥管理中心产品对象，负责密钥生成、消耗、恢复、吊销、CAKM 响应和 HSM 能力封装。
 
 ## 连线关系
 
@@ -19,9 +19,9 @@
 
 | 连线 | 含义 |
 | --- | --- |
-| RA-CA | 以 RA 站点管理完成站点授权、站点证书、管理员授权和可用 CA / 模板范围配置，并以 CMP 为核心承载证书签发、更新、吊销、密钥恢复等生命周期动作，传递 PKCS#10 CSR、证书链、PKIStatus 和审计流水。 |
-| CA-OCSP | 通过状态同步 API / 任务传递证书状态、吊销数据、Issuer 信息、Responder 配置和响应签名策略，并支撑 OCSP over HTTP(S) 查询响应。 |
-| CA-KMC | 以 CAKM 协议承载密钥申请、托管、恢复、吊销和 HSM 协同，外层通过 HTTP API 传输 Base64 编码后的 CAKM 二进制载荷。 |
+| RA-CA | 以 RA 站点管理维护站点证书、管理员、可用 CA / 子 CA / V2X 隐式证书和模板范围；RA 侧按站点证书序列号查询授权信息，证书业务通过 `/cmp/request`、`/cmp/kur`、`/cmp/rr`、`/std/cmpkrr` 等 CMP 入口处理，传递 PKCS#10 CSR、证书链、PKIStatus 和失败原因。 |
+| CA-OCSP | CA 保存 OCSP 地址、端口、协议和服务器证书配置；正式同步由 CA 构造 PKIX 状态载荷，携带 `X-CA-Cert-SN` 请求头 POST 到 OCSP `/update`，OCSP 侧用 CA peer 证书校验来源，并继续支撑 OCSP over HTTP(S) 查询响应。 |
+| CA-KMC | CA 保存 KMC 地址、端口、启用状态和通信证书配置；连通性测试调用 `/api/v1/connverify/kmcSignature`，证书双证书场景通过 `/api/v1/keyops/consume`、`/api/v1/keyops/restore`、`/api/v1/keyops/revoke` 传输 JSON `data` 字段中的 Base64 CAKM 二进制载荷。 |
 
 云版 CA 部署架构图展示租户区到管理区的部署链路：租户、租户区 Nginx、租户区 ca_admin、云平台网络隔离 proxyserver、管理区统服 Nginx、管理区 Nginx、管理区 ca_admin_web、管理区 ca_admin。租户区 ca_admin 负责查询并缓存 CRL，云平台网络隔离 proxyserver 承接跨区代理转发，管理区 ca_admin 承接所有业务接口执行。数据库节点说明管理区 ca_admin 与统服共用数据库，按库分租户，一库一租户。
 

@@ -1074,22 +1074,22 @@
             <div class="name">Key Management Center</div>
           </div>
         </div>
-        <p>提供密钥托管、恢复、CAKM 响应与加密材料流转能力。</p>
+        <p>提供密钥生成、消耗、恢复、吊销、CAKM 响应与加密材料流转能力。</p>
         <ul>
-          <li>密钥托管与恢复</li>
+          <li>密钥消耗、恢复与吊销</li>
           <li>CAKM 业务处理</li>
-          <li>证书 / 响应签名密钥支撑</li>
+          <li>HSM 与系统证书密钥支撑</li>
         </ul>
       </article>
 
       <div class="flow-label cert label-ra-ca" data-code="!" data-flow="ra-ca" role="button" tabindex="0" aria-label="点击查看 RA 和 CA 联动详情" title="点击查看 RA 和 CA 联动详情">
-        <span>RA ⇄ CA：CMP 证书申请、更新、吊销、密钥恢复与签发结果回传</span>
+        <span>RA ⇄ CA：RA 站点授权、CMP 证书业务、授权信息查询与结果回传</span>
       </div>
       <div class="flow-label status label-ca-ocsp" data-code="!" data-flow="ca-ocsp" role="button" tabindex="0" aria-label="点击查看 CA 和 OCSP 联动详情" title="点击查看 CA 和 OCSP 联动详情">
-        <span>CA ⇄ OCSP：证书状态同步、OCSP Responder 配置、OCSP 请求响应协议支撑</span>
+        <span>CA → OCSP：PKIX 状态同步、CA 通信证书标识、OCSP 查询响应支撑</span>
       </div>
       <div class="flow-label key label-ca-kmc" data-code="!" data-flow="ca-kmc" role="button" tabindex="0" aria-label="点击查看 CA 和 KMC 联动详情" title="点击查看 CA 和 KMC 联动详情">
-        <span>CA ⇄ KMC：CAKM 二进制协议、密钥托管、密钥恢复、密钥吊销</span>
+        <span>CA ⇄ KMC：CAKM 二进制载荷、keyops consume / restore / revoke</span>
       </div>
     </div>
 
@@ -1418,7 +1418,7 @@
           {
             name: "外部集成",
             desc: "对接 RA、OCSP、KMC 等产品，形成完整证书业务链路。",
-            items: ["RA 受理接口与结果回传", "OCSP 状态同步", "KMC / CAKM 密钥服务对接"]
+            items: ["RA 站点授权与 CMP 接入", "OCSP 状态同步", "KMC keyops / CAKM 密钥服务对接"]
           }
         ]
       },
@@ -1435,8 +1435,8 @@
           },
           {
             name: "状态数据同步",
-            desc: "从 CA 获取状态数据并维护可查询的本地状态视图。",
-            items: ["证书序列号与吊销数据接入", "增量同步与定时刷新", "状态有效期与缓存控制"]
+            desc: "接收 CA 推送的状态数据并维护可查询的本地状态视图。",
+            items: ["证书序列号与吊销数据接入", "CA /update 状态同步", "状态有效期与缓存控制"]
           },
           {
             name: "签名证书管理",
@@ -1453,18 +1453,18 @@
       kmc: {
         kicker: "产品功能模块",
         title: "KMC / Key Management Center",
-        subtitle: "KMC 管理密钥生成、托管、恢复和 CAKM 响应，向 CA 等系统提供受控的密钥服务。",
+        subtitle: "KMC 管理密钥生成、消耗、恢复、吊销和 CAKM 响应，向 CA 等系统提供受控的密钥服务。",
         accent: "#b797ff",
         modules: [
           {
             name: "密钥生命周期",
-            desc: "覆盖密钥从生成到归档、恢复、销毁的完整管理过程。",
-            items: ["密钥生成、导入、托管", "备份、恢复、轮换、销毁", "密钥状态与版本管理"]
+            desc: "覆盖密钥从生成、备用、在用到归档的管理过程。",
+            items: ["密钥生成、备用、消耗", "恢复、吊销、归档", "密钥状态与版本管理"]
           },
           {
             name: "CAKM 服务",
-            desc: "响应 CA 发起的密钥管理请求，返回可验证的加密材料。",
-            items: ["CAKM 请求受理", "密钥封装与响应生成", "密钥恢复与托管结果回传"]
+            desc: "响应 CA 发起的 keyops 请求，返回 Base64 编码的 CAKM 响应数据。",
+            items: ["keyops/consume 申请密钥", "keyops/restore 恢复密钥", "keyops/revoke 吊销密钥"]
           },
           {
             name: "HSM 对接",
@@ -1574,33 +1574,33 @@
       "ra-ca": {
         kicker: "产品联动详情",
         title: "RA ⇄ CA",
-        subtitle: "RA 负责业务受理与审核入口，CA 负责证书签发与生命周期处理；两者之间以 CMP 证书管理协议为核心，围绕申请、更新、吊销、密钥恢复、签发结果和证书下载形成闭环。",
+        subtitle: "RA 负责业务受理与审核入口，CA 负责站点授权、证书签发与生命周期处理；两者之间通过 RA 站点授权 API、CMP 二进制协议和管理查询接口形成联动。",
         accent: "#62a8ff",
         summary: {
           name: "联动边界",
-          desc: "RA 不直接完成签名签发，CA 不直接承接全部业务受理；RA 在自动审核或人工审核通过后把合规请求通过 CMP 或管理 API 提交给 CA，CA 返回签发、更新、吊销和密钥恢复处理结果。",
-          items: ["CMP 承载签发、更新、冻结、解冻、延期、吊销和密钥恢复动作", "RA 站点管理承载站点授权、站点证书、管理员授权和可用 CA 范围", "CSR、模板、主体 DN、扩展项、算法字段传递", "签发结果、证书序列号、证书链、下载地址回传", "PKIStatus、失败原因、业务流水号和操作审计对账"]
+          desc: "RA 不直接完成签名签发，CA 不直接承接全部业务受理；CA 侧维护 RA 站点、站点证书、管理员和授权范围，并通过 CMP 接收签发、更新、吊销、密钥恢复等证书业务消息。",
+          items: ["RA 站点管理维护站点证书、管理员、可用 CA / 子 CA / 隐式证书和模板范围", "授权信息查询按 RA 站点证书序列号返回模板、CA 证书、自定义字段等配置", "CMP /cmp/request、/cmp/kur、/cmp/rr、/std/cmpkrr 处理二进制证书业务消息", "CMP 请求使用消息签名鉴权，CA 从 RA 证书序列号加载 RA 站点证书", "签发结果、证书序列号、证书链、PKIStatus 或失败原因回传"]
         },
         interactions: [
           {
             name: "RA 站点管理",
             desc: "CA 对 RA 站点进行授权管理，RA 站点信息决定该 RA 可连接的 CA、可使用的模板、站点证书和管理员操作边界。",
-            items: ["新增 / 编辑 / 禁用 RA 站点", "站点域名或 IP、可用 CA 范围、模板授权", "RA 业务管理员和 RA 审计员授权"]
+            items: ["新增 / 编辑 / 启用 / 禁用 RA 站点", "站点域名或 IP、站点证书序列号", "模板、CA、子 CA、V2X 隐式证书授权"]
           },
           {
-            name: "RA 站点证书",
-            desc: "RA 站点向 CA 提交服务器证书请求，由 CA 签发 RA 站点服务器证书。RA 与 CA 之间基于 HTTPS/TLS 通信，仅对服务器证书进行签名与证书链校验（服务器证书验签）以确认对端服务器身份，不使用双向证书认证（mTLS）。",
-            items: ["RA 站点 CSR / 服务器证书请求", "RA 站点服务器证书与证书链", "TLS 服务器证书签名与证书链校验"]
+            name: "RA 授权信息查询",
+            desc: "RA 侧按站点证书序列号查询授权信息，CA 返回该站点可用模板、CA 证书、子 CA 证书、隐式证书和模板字段关系。",
+            items: ["/ra_site/auth_info", "RASiteSyncAuth 与 CATenantStatus 中间件", "templates、caCerts、subCaCerts、implicitCerts、templateCaRels"]
           },
           {
-            name: "证书签发申请",
-            desc: "RA 将用户申请材料、CSR 和模板策略提交给 CA，CA 按 CA 体系、模板和算法策略完成签发前校验。",
-            items: ["CMP IR / CR 或本系统对应申请消息", "PKCS#10 CSR / 公钥材料", "主体 DN、SAN、扩展项和证书模板"]
+            name: "CMP 证书业务",
+            desc: "CA 暴露 CMP 二进制协议入口，处理证书申请、密钥更新、吊销/冻结/解冻和密钥恢复请求。",
+            items: ["/cmp/request", "/cmp/kur", "/cmp/rr", "/std/cmpkrr"]
           },
           {
             name: "生命周期操作",
-            desc: "RA 把更新、冻结、解冻、延期、吊销等证书生命周期动作传递给 CA，由 CA 生成权威状态结果。",
-            items: ["CMP KUR / Revocation 类业务消息", "证书序列号和 Issuer 标识", "吊销原因、延期时间、操作流水号"]
+            desc: "CA 在 CMP 逻辑中按请求类型处理签发、更新、延期、吊销、冻结、解冻和密钥恢复，并在需要时联动 KMC。",
+            items: ["PKCS#10 / 公钥材料", "TemplateId、证书序列号和 Issuer 标识", "吊销原因、KUR / RR / KRR 业务数据"]
           },
           {
             name: "状态回传",
@@ -1615,10 +1615,10 @@
         ],
         methods: [
           ["RA 站点管理", "CA 侧维护 RA 站点名称、域名/IP、站点证书、可用 CA 范围、模板授权和站点状态，是 RA 发起业务请求前的授权基础。"],
-          ["HTTPS / 服务器证书验签", "RA 与 CA 通过 HTTPS/TLS 通信，仅校验对端服务器证书的签名与证书链以确认服务器身份，校验通过后放行业务通信；通道不进行双向客户端证书认证（非 mTLS）。"],
-          ["CMP", "RA 与 CA 的证书管理主协议，覆盖签发、更新、吊销、密钥恢复等生命周期动作，并返回 PKIStatus、证书或失败原因。"],
+          ["RA 授权查询", "CA 暴露 /ra_site/auth_info 和 /ra_site/admin/ukey，按 RA 站点证书序列号约束授权范围和管理员查询。"],
+          ["CMP", "CA 暴露 /cmp/request、/cmp/kur、/cmp/rr、/std/cmpkrr；CMP 请求不走 JWT，依赖 CMP 消息签名验证。"],
           ["PKCS#10 / CSR", "用户或业务系统生成的证书请求载荷，承载公钥、主体和签名证明，RA 透传或校验后提交给 CA。"],
-          ["管理 API", "用于查询、下载、审批结果同步、配置读取等管理类动作，和 CMP 证书业务消息共同组成完整链路。"],
+          ["管理 API", "RA 站点、RA 管理员、站点证书、授权模板和授权 CA 范围通过 /ra_site/* 管理接口维护。"],
           ["PEM / DER / 证书链", "CA 签发完成后回传证书、证书链和序列号，RA 提供查询下载和业务系统取证入口。"],
           ["审计对账", "RA 与 CA 以业务流水号、证书序列号、操作类型、PKIStatus 和操作时间形成跨系统追踪链。"]
         ]
@@ -1626,18 +1626,18 @@
       "ca-ocsp": {
         kicker: "产品联动详情",
         title: "CA ⇄ OCSP",
-        subtitle: "CA 产生证书状态事实，OCSP 消费状态数据并对外提供低延迟查询；两者之间重点是状态同步、Issuer 绑定、响应签名配置，以及标准 OCSP 请求响应协议支撑。",
+        subtitle: "CA 产生证书状态事实并主动推送到 OCSP /update；OCSP 维护本地状态视图并对外提供标准 OCSP 查询响应。",
         accent: "#76d98b",
         summary: {
           name: "联动边界",
-          desc: "CA 是证书状态的权威来源，OCSP 是在线查询服务；OCSP 不决定证书生命周期，只按照 CA 同步的数据和签名策略生成标准 OCSP 响应。",
-          items: ["证书有效、吊销、未知状态数据同步", "Issuer、CA 证书链、状态范围和 Responder 地址配置", "OCSP 响应签名证书、签名算法和证书链策略同步", "thisUpdate、nextUpdate、缓存窗口和状态发布时间协同"]
+          desc: "CA 是证书状态的权威来源，OCSP 是在线查询服务；正式同步由 CA 构造 PKIX 状态载荷，携带 CA 通信证书序列号请求头，POST 到 OCSP Responder 的 /update。",
+          items: ["CA 保存 OCSP 地址、端口、协议和服务器证书配置", "CA 构造 PKIX 状态请求并发送 hexData 到 OCSP /update", "正式同步请求头携带 X-CA-Cert-SN 标识 CA 通信证书", "OCSP 侧通过 CA peer 证书校验同步来源", "OCSP 查询接口返回带响应签名证书签名的状态响应"]
         },
         interactions: [
           {
             name: "状态数据同步",
-            desc: "CA 将证书序列号、吊销时间、吊销原因等状态事实同步给 OCSP。",
-            items: ["增量状态记录或定时状态快照", "证书序列号、Issuer、状态值", "吊销时间、吊销原因、状态更新时间"]
+            desc: "CA 同步任务扫描未同步的签名证书、加密证书和吊销证书，按 CA 分批构造状态数据并推送到 OCSP。",
+            items: ["OCSP_SYNC 定时任务", "ocsp_synced 标记", "证书序列号、Issuer Hash、状态值、吊销原因"]
           },
           {
             name: "OCSP 查询响应",
@@ -1645,63 +1645,63 @@
             items: ["OCSP Request / Response", "HTTP(S) Responder 地址", "thisUpdate / nextUpdate 响应有效期"]
           },
           {
-            name: "签名配置协同",
-            desc: "CA 与 OCSP 协同维护响应签名证书、Issuer 绑定和证书链信息。",
-            items: ["OCSP 响应签名证书", "Issuer 证书和 CA 证书链", "签名算法、证书用途和切换策略"]
+            name: "CA Peer 与响应签名",
+            desc: "OCSP 侧维护 CA 通信证书和响应签名证书；正式 /update 根据 X-CA-Cert-SN 查找启用的 CA peer，查询响应选择启用的响应签名证书。",
+            items: ["T_ocsp_ca_peer_certificate", "T_ocsp_response_signing_certificate", "Issuer Name Hash / Key Hash 绑定"]
           },
           {
-            name: "发布与缓存",
-            desc: "CA 和 OCSP 共同控制状态发布频率、缓存窗口和异常兜底策略，保障高频查询场景的响应稳定性。",
-            items: ["状态发布周期", "缓存预热和过期策略", "状态同步失败告警"]
+            name: "连通性测试",
+            desc: "CA 侧 /ca/ocsp/config/test-connectivity 会构造测试 PKIX 请求并转发到 OCSP /test；它用于连通性验证，不等同于正式 /update 同步。",
+            items: ["CA /ca/ocsp/config/test-connectivity", "OCSP /test", "返回 OCSP Responder 的 hexData"]
           }
         ],
         methods: [
           ["OCSP over HTTP(S)", "对外查询协议，客户端提交 OCSP Request，OCSP 服务返回带签名的状态响应。"],
-          ["状态同步 API / 任务", "CA 按时间戳、版本号、状态变更队列或定时任务向 OCSP 同步最新证书状态。"],
+          ["状态同步 API / 任务", "CA 的 OCSP_SYNC 任务或手动触发接口调用 OCSP /update，同步证书状态。"],
           ["CRL / 吊销数据", "CA 侧吊销事实可作为 OCSP 状态数据来源之一，包含证书序列号、吊销时间和吊销原因。"],
-          ["Issuer / Responder 配置", "通过管理 API 同步 Issuer 绑定、Responder 地址、响应签名证书和发布状态。"],
-          ["缓存窗口", "通过 thisUpdate、nextUpdate、本地缓存和预热策略控制响应新鲜度与查询延迟。"]
+          ["X-CA-Cert-SN", "正式 CA-to-OCSP /update 请求使用该请求头传递 CA 通信证书序列号，OCSP 侧据此查找 CA peer 证书。"],
+          ["响应签名证书", "OCSP 侧通过响应签名证书列表、Issuer 绑定和启用状态决定实际签名证书。"]
         ]
       },
       "ca-kmc": {
         kicker: "产品联动详情",
         title: "CA ⇄ KMC",
-        subtitle: "CA 在证书业务中需要密钥托管、恢复、吊销或 CAKM 响应时对接 KMC；KMC 通过 CAKM 二进制协议处理请求，并返回受控的密钥材料、索引或响应结果。",
+        subtitle: "CA 在双证书签发、更新、延期、吊销或恢复场景下对接 KMC；CA 将 CAKM 二进制载荷 Base64 后放入 JSON data 字段，调用 KMC /keyops/consume、/restore、/revoke。",
         accent: "#b891ff",
         summary: {
           name: "联动边界",
-          desc: "CA 发起证书与密钥相关业务编排，KMC 负责 CAKM 协议解析、签名验证、密钥管理与密码设备调用；密钥材料通过数字信封、密钥引用或封装结果受控流转。",
-          items: ["CAKM 申请、恢复、吊销请求与响应", "Base64 编码传输 CAKM 二进制协议数据", "HSM 密钥索引、证书引用、算法和设备通道协同", "密钥操作审计、失败重试、响应码和结果对账"]
+          desc: "CA 编排证书业务，KMC 负责 CAKM 协议解析、签名验证、密钥生成/恢复/吊销与 HSM 调用；KMC 返回加密公钥和数字信封封装后的私钥，CA 用于生成或更新加密证书。",
+          items: ["CA 保存 KMC 地址、端口、启用状态和通信证书配置", "连通性测试调用 /api/v1/connverify/kmcSignature", "申请密钥调用 /api/v1/keyops/consume", "恢复密钥调用 /api/v1/keyops/restore", "吊销密钥调用 /api/v1/keyops/revoke"]
         },
         interactions: [
           {
-            name: "CAKM 申请密钥",
-            desc: "CA 构建 CAKM 申请请求，KMC 校验请求签名并生成或分配匹配密钥材料。",
-            items: ["请求类型、发送方证书序列号、任务编号", "申请密钥类型、密钥长度、返回算法", "用户签名公钥、用户加密证书序列号"]
+            name: "申请加密密钥",
+            desc: "CA 在 KMC 模式生成双证书加密证书时，携带签名公钥、证书序列号和有效期向 KMC 申请加密密钥材料。",
+            items: ["ApplyKeyFromKMC", "keyops/consume", "加密公钥", "签名公钥数字信封封装的加密私钥"]
           },
           {
-            name: "密钥托管恢复",
-            desc: "当业务涉及托管或恢复时，CA 指定证书或密钥标识，KMC 查找密钥记录并生成受保护的恢复响应。",
-            items: ["用户证书序列号", "密钥标识和托管状态", "数字信封保护的恢复材料"]
+            name: "恢复加密密钥",
+            desc: "CA 根据加密证书序列号和新的签名公钥向 KMC 恢复密钥，KMC 返回原加密公钥和重新封装后的私钥材料。",
+            items: ["RecoverKeyFromKMC", "keyops/restore", "加密证书序列号", "恢复响应 Base64 数据"]
           },
           {
-            name: "密钥吊销同步",
-            desc: "证书吊销或密钥失效场景下，CA 通知 KMC 更新密钥状态，KMC 记录吊销结果和操作日志。",
-            items: ["CAKM Revoke 请求", "证书序列号和吊销原因", "密钥状态、结果码和审计日志"]
+            name: "吊销加密密钥",
+            desc: "用户双证书吊销或更新加密密钥时，CA 在数据库事务前调用 KMC 吊销接口，避免本地证书状态和 KMC 密钥状态不一致。",
+            items: ["RevokeKeyFromKMC", "keyops/revoke", "加密证书序列号", "KMC 吊销状态与错误信息"]
           },
           {
             name: "密码设备协同",
-            desc: "KMC 屏蔽 HSM 细节，向 CA 返回可引用的密钥索引、证书引用或签名结果。",
-            items: ["HSM 设备通道和连接校验", "密钥索引和设备资源映射", "签名、加密、解密或封装结果"]
+            desc: "KMC 内部使用 HSM 设备、主密钥和系统证书完成签名、封装和密钥保护，CA 只消费 KMC 返回的受控材料。",
+            items: ["HSM 设备通道和连接校验", "主密钥 / MMK 索引", "系统证书与 CAKM 响应签名"]
           }
         ],
         methods: [
-          ["CAKM", "国密证书颁发机构密钥管理协议，承载密钥申请、恢复、吊销等请求与响应。"],
-          ["Base64 + HTTP API", "接口外层通过 HTTP 传输，字段中放置 Base64 编码后的 CAKM 二进制协议数据。"],
-          ["属性 ID / Value 结构", "CAKM 载荷以属性 ID 和属性值组织，包含请求类型、发送方证书序列号、任务编号、密钥类型、算法和用户证书序列号。"],
+          ["CAKM", "CA 和 KMC 之间的二进制密钥管理协议，当前通过 keyops consume / restore / revoke 承载申请、恢复和吊销。"],
+          ["Base64 + JSON data", "HTTP 外层传 JSON，请求和响应的 data 字段存放 Base64 编码后的 CAKM 二进制数据。"],
+          ["KMC 配置", "CA 侧 /system/kmc/config/save、/get、/test 维护 KMC 地址、端口、启用状态和通信证书。"],
           ["签名验证与数字信封", "KMC 加载 CAKM 请求后验证 CA 签名，响应中使用数字信封或封装材料保护用户密钥。"],
-          ["密钥引用传递", "优先传递密钥 ID、HSM 索引、证书引用或封装材料，减少明文密钥暴露面。"],
-          ["失败重试与审计", "对 KMC 调用超时、失败码、设备异常建立重试和跨系统审计链。"]
+          ["KMC 强约束", "CA 侧双证书流程会校验 KMC 返回的加密公钥、封装私钥和 kmcId，避免混用本地密钥材料。"],
+          ["失败与审计", "KMC 调用超时、失败码和设备异常会进入证书业务错误处理、操作日志或 KMC 吊销状态字段。"]
         ]
       },
       "cloud-tenant-nginx": {
@@ -1867,11 +1867,11 @@
         "cloud-tenant": { x: -772, y: -203 },
         "cloud-tenant-nginx": { x: -319, y: -215 },
         "cloud-tenant-ca": { x: 108, y: -273 },
-        "cloud-isolation-proxy": { x: 505, y: -273 },
-        "cloud-unified-nginx": { x: 611, y: -36 },
-        "cloud-manage-nginx": { x: 675, y: 230 },
-        "cloud-admin-web": { x: 213, y: 199 },
-        "cloud-admin": { x: -234, y: 231 },
+        "cloud-isolation-proxy": { x: 728, y: -273 },
+        "cloud-unified-nginx": { x: 505, y: -20 },
+        "cloud-manage-nginx": { x: 675, y: 231 },
+        "cloud-admin-web": { x: 213, y: 200 },
+        "cloud-admin": { x: -234, y: 232 },
         "cloud-db": { x: -653, y: 216 }
       }
     };
