@@ -23,7 +23,7 @@
 | CA-OCSP | 通过状态同步 API / 任务传递证书状态、吊销数据、Issuer 信息、Responder 配置和响应签名策略，并支撑 OCSP over HTTP(S) 查询响应。 |
 | CA-KMC | 以 CAKM 协议承载密钥申请、托管、恢复、吊销和 HSM 协同，外层通过 HTTP API 传输 Base64 编码后的 CAKM 二进制载荷。 |
 
-云版 CA 部署架构图展示租户区到管理区的部署链路：租户、租户区 Nginx、租户区 ca_admin proxyserver、管理区统服 Nginx、管理区 Nginx、管理区 ca_admin_web、管理区 ca_admin。租户区 ca_admin 负责查询并缓存 CRL，管理区 ca_admin 承接所有业务接口执行。数据库节点说明管理区 ca_admin 与统服共用数据库，按库分租户，一库一租户。
+云版 CA 部署架构图展示租户区到管理区的部署链路：租户、租户区 Nginx、租户区 ca_admin、云平台网络隔离 proxyserver、管理区统服 Nginx、管理区 Nginx、管理区 ca_admin_web、管理区 ca_admin。租户区 ca_admin 负责查询并缓存 CRL，云平台网络隔离 proxyserver 承接跨区代理转发，管理区 ca_admin 承接所有业务接口执行。数据库节点说明管理区 ca_admin 与统服共用数据库，按库分租户，一库一租户。
 
 ## 交互能力
 
