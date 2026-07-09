@@ -6,25 +6,26 @@
   <title>CA Architecture Diagrams</title>
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #0c1117;
-      --panel: #121922;
-      --panel-strong: #18222f;
-      --text: #edf4ff;
-      --muted: #8fa2b6;
-      --line: rgba(210, 225, 242, 0.24);
-      --ra: #7cb7ff;
-      --ca: #ffbd66;
-      --ocsp: #74d897;
-      --kmc: #b797ff;
-      --ldap: #f472b6;
-      --cert: #62a8ff;
-      --status: #76d98b;
-      --key: #b891ff;
-      --tenant: #7cb7ff;
-      --edge: #5eead4;
-      --manage: #ffbd66;
-      --db: #b797ff;
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --panel-strong: #eef2f5;
+      --text: #18212c;
+      --muted: #647281;
+      --line: #c6d0da;
+      --ra: #3e6f89;
+      --ca: #8b6c34;
+      --ocsp: #4c7a5d;
+      --kmc: #655c84;
+      --ldap: #8a5d72;
+      --cert: #3e6f89;
+      --status: #4c7a5d;
+      --key: #655c84;
+      --tenant: #3e6f89;
+      --edge: #4f7d78;
+      --manage: #8b6c34;
+      --db: #655c84;
+      --shadow: 0 1px 2px rgba(35, 45, 55, 0.08);
     }
 
     * {
@@ -34,14 +35,9 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background:
-        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        radial-gradient(circle at 50% 44%, rgba(68, 119, 188, 0.18), transparent 42%),
-        var(--bg);
-      background-size: 32px 32px, 32px 32px, auto, auto;
+      background: var(--bg);
       color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
       overflow: hidden;
     }
 
@@ -58,13 +54,14 @@
       top: 30px;
       left: 42px;
       z-index: 3;
+      max-width: min(520px, calc(100% - 560px));
     }
 
     .title h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 25px;
       line-height: 1.1;
-      font-weight: 780;
+      font-weight: 720;
       letter-spacing: 0;
     }
 
@@ -77,23 +74,23 @@
 
     .view-toggle {
       position: absolute;
-      top: 108px;
+      top: 118px;
       left: 42px;
       z-index: 8;
       display: inline-flex;
       align-items: center;
       gap: 12px;
-      border: 1px solid rgba(222, 235, 250, 0.18);
-      background: rgba(12, 17, 23, 0.78);
+      border: 1px solid #cbd5df;
+      background: var(--panel);
       color: var(--text);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      box-shadow: var(--shadow);
       padding: 10px 13px;
       font: inherit;
       font-size: 12px;
       line-height: 1;
       white-space: nowrap;
       cursor: pointer;
-      transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
     }
 
     .view-toggle::before {
@@ -116,11 +113,11 @@
 
     .view-toggle:hover,
     .view-toggle:focus-visible {
-      border-color: rgba(237, 244, 255, 0.72);
-      background: rgba(17, 26, 36, 0.96);
-      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38), 0 0 16px rgba(237, 244, 255, 0.16);
-      transform: translateY(-2px);
-      outline: none;
+      border-color: #8d9aaa;
+      background: #f9fafb;
+      transform: translateY(-1px);
+      outline: 2px solid rgba(62, 111, 137, 0.18);
+      outline-offset: 2px;
     }
 
     .canvas {
@@ -152,13 +149,15 @@
 
     .flow-base {
       fill: none;
-      stroke: var(--line);
-      stroke-width: 2;
+      stroke: currentColor;
+      stroke-width: 1.8;
       stroke-linecap: round;
       stroke-linejoin: round;
+      opacity: 0.52;
     }
 
     .flow-glow {
+      display: none;
       fill: none;
       stroke: currentColor;
       stroke-width: 3;
@@ -173,12 +172,12 @@
     .flow-core {
       fill: none;
       stroke: currentColor;
-      stroke-width: 1.4;
+      stroke-width: 2.2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 1 13;
-      opacity: 0.9;
-      animation: dashFlow 0.9s linear infinite;
+      stroke-dasharray: none;
+      opacity: 0.82;
+      animation: none;
     }
 
     .flow.cert {
@@ -230,7 +229,7 @@
     .flow:hover .flow-base,
     .flow.active .flow-base {
       stroke: currentColor;
-      opacity: 0.45;
+      opacity: 0.78;
     }
 
     .flow:hover .flow-glow,
@@ -240,8 +239,7 @@
     }
 
     .flow-dot {
-      fill: currentColor;
-      filter: url(#dotGlow);
+      display: none;
     }
 
     .node {
@@ -249,50 +247,36 @@
       z-index: 4;
       width: 244px;
       min-height: 126px;
-      border: 1px solid rgba(222, 235, 250, 0.16);
-      background: linear-gradient(180deg, rgba(24, 34, 47, 0.94), rgba(13, 19, 27, 0.96));
-      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+      border: 1px solid #d4dce5;
+      background: var(--panel);
+      box-shadow: var(--shadow);
       padding: 18px 18px 16px;
       cursor: grab;
       touch-action: none;
       user-select: none;
-      transition: border-color 180ms ease, box-shadow 180ms ease;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
     }
 
     .node::before {
       content: "";
       position: absolute;
       inset: 0;
-      border-top: 4px solid currentColor;
-      opacity: 0.95;
+      border-top: 3px solid currentColor;
+      opacity: 0.82;
       pointer-events: none;
     }
 
     .node::after {
-      content: "!";
-      position: absolute;
-      top: -11px;
-      right: -11px;
-      display: grid;
-      place-items: center;
-      width: 24px;
-      height: 24px;
-      border: 1px solid color-mix(in srgb, currentColor 58%, transparent);
-      background: rgba(12, 17, 23, 0.9);
-      color: currentColor;
-      font-size: 14px;
-      font-weight: 860;
-      line-height: 1;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-      pointer-events: none;
-      animation: badgePulse 3s ease-out infinite;
+      display: none;
     }
 
     .node:hover,
     .node:focus-visible {
-      border-color: color-mix(in srgb, currentColor 58%, transparent);
-      box-shadow: 0 22px 58px rgba(0, 0, 0, 0.42), 0 0 0 1px color-mix(in srgb, currentColor 24%, transparent);
-      outline: none;
+      border-color: color-mix(in srgb, currentColor 48%, #d4dce5);
+      background: #fbfcfd;
+      transform: translateY(-1px);
+      outline: 2px solid color-mix(in srgb, currentColor 18%, transparent);
+      outline-offset: 2px;
     }
 
     .node:hover::after,
@@ -306,7 +290,7 @@
       z-index: 8;
       cursor: grabbing;
       border-color: currentColor;
-      box-shadow: 0 26px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px color-mix(in srgb, currentColor 38%, transparent);
+      box-shadow: 0 8px 18px rgba(35, 45, 55, 0.14);
       transition: none;
     }
 
@@ -394,10 +378,10 @@
       width: 42px;
       height: 42px;
       border: 1px solid currentColor;
-      background: color-mix(in srgb, currentColor 15%, transparent);
-      color: var(--text);
+      background: color-mix(in srgb, currentColor 8%, #ffffff);
+      color: currentColor;
       font-size: 14px;
-      font-weight: 760;
+      font-weight: 720;
     }
 
     .node h2 {
@@ -410,14 +394,14 @@
 
     .node .name {
       margin-top: 5px;
-      color: color-mix(in srgb, currentColor 70%, #ffffff);
+      color: currentColor;
       font-size: 12px;
-      font-weight: 680;
+      font-weight: 650;
     }
 
     .node p {
       margin: 0;
-      color: #b4c2d1;
+      color: #5d6a78;
       font-size: 13px;
       line-height: 1.6;
     }
@@ -434,7 +418,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #d8e3ef;
+      color: #334252;
       font-size: 12px;
       line-height: 1.35;
     }
@@ -454,25 +438,23 @@
       place-items: center;
       width: 28px;
       height: 28px;
-      border: 1px solid color-mix(in srgb, currentColor 64%, transparent);
-      background: rgba(12, 17, 23, 0.88);
-      color: var(--text);
-      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+      border: 1px solid currentColor;
+      background: var(--panel);
+      color: currentColor;
+      box-shadow: var(--shadow);
       overflow: hidden;
       cursor: pointer;
-      transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
-      animation: badgePulse 3s ease-out infinite;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
     }
 
     .flow-label::before {
-      content: "!";
+      content: "i";
       display: grid;
       place-items: center;
       width: 28px;
       height: 28px;
-      color: currentColor;
       font-size: 15px;
-      font-weight: 860;
+      font-weight: 720;
       line-height: 1;
     }
 
@@ -522,19 +504,18 @@
     }
 
     .cloud-canvas .flow-glow {
-      filter: url(#cloudSoftGlow);
+      display: none;
     }
 
     .cloud-canvas .flow-dot {
-      filter: url(#cloudDotGlow);
+      display: none;
     }
 
     .flow-label:hover,
     .flow-label.active {
-      background: rgba(17, 26, 36, 0.96);
+      background: #fbfcfd;
       border-color: currentColor;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.36), 0 0 14px color-mix(in srgb, currentColor 24%, transparent);
-      transform: translateY(-2px);
+      transform: translateY(-1px);
       cursor: pointer;
     }
 
@@ -570,8 +551,8 @@
       align-items: center;
       gap: 7px;
       padding: 8px 10px;
-      border: 1px solid rgba(222, 235, 250, 0.12);
-      background: rgba(12, 17, 23, 0.72);
+      border: 1px solid #d6dee7;
+      background: var(--panel);
     }
 
     .legend-item[hidden] {
@@ -627,20 +608,20 @@
       place-items: center;
       width: 42px;
       height: 42px;
-      border: 1px solid rgba(222, 235, 250, 0.16);
-      background: rgba(12, 17, 23, 0.78);
+      border: 1px solid #cbd5df;
+      background: var(--panel);
       color: var(--text);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
-      transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      box-shadow: var(--shadow);
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
     }
 
     .github-link:hover,
     .github-link:focus-visible {
-      border-color: rgba(237, 244, 255, 0.72);
-      background: rgba(17, 26, 36, 0.96);
-      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38), 0 0 16px rgba(237, 244, 255, 0.16);
-      transform: translateY(-2px);
-      outline: none;
+      border-color: #8d9aaa;
+      background: #f9fafb;
+      transform: translateY(-1px);
+      outline: 2px solid rgba(62, 111, 137, 0.18);
+      outline-offset: 2px;
     }
 
     .github-link svg {
@@ -661,13 +642,13 @@
 
     .drag-hint,
     .copy-layout {
-      border: 1px solid rgba(222, 235, 250, 0.14);
-      background: rgba(12, 17, 23, 0.72);
-      color: #c6d4e3;
+      border: 1px solid #cbd5df;
+      background: var(--panel);
+      color: #536170;
       padding: 9px 12px;
       font-size: 12px;
       line-height: 1;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      box-shadow: var(--shadow);
     }
 
     .drag-hint {
@@ -677,17 +658,17 @@
     .copy-layout {
       font: inherit;
       cursor: pointer;
-      transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
     }
 
     .copy-layout:hover,
     .copy-layout:focus-visible {
-      border-color: rgba(237, 244, 255, 0.72);
-      background: rgba(17, 26, 36, 0.96);
+      border-color: #8d9aaa;
+      background: #f9fafb;
       color: var(--text);
-      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38), 0 0 16px rgba(237, 244, 255, 0.16);
-      transform: translateY(-2px);
-      outline: none;
+      transform: translateY(-1px);
+      outline: 2px solid rgba(62, 111, 137, 0.18);
+      outline-offset: 2px;
     }
 
     .copy-layout.copied {
@@ -708,12 +689,8 @@
       display: grid;
       grid-template-rows: auto 1fr;
       padding: 34px 42px;
-      background-color: #070b10;
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--modal-accent, var(--cert)) 22%, transparent), transparent 31%);
-      background-size: 32px 32px, 32px 32px, auto;
+      background-color: var(--bg);
+      background-image: none;
       color: var(--text);
     }
 
@@ -726,7 +703,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 24px;
-      border-bottom: 1px solid rgba(222, 235, 250, 0.14);
+      border-bottom: 1px solid #d6dee7;
       padding-bottom: 24px;
     }
 
@@ -734,21 +711,21 @@
       margin: 0 0 12px;
       color: var(--modal-accent, var(--cert));
       font-size: 12px;
-      font-weight: 760;
+      font-weight: 700;
     }
 
     .modal-title {
       margin: 0;
       font-size: clamp(34px, 5vw, 68px);
       line-height: 0.95;
-      font-weight: 820;
+      font-weight: 760;
       letter-spacing: 0;
     }
 
     .modal-subtitle {
       margin: 18px 0 0;
       max-width: 760px;
-      color: #bdcad8;
+      color: #5d6a78;
       font-size: 15px;
       line-height: 1.75;
     }
@@ -758,8 +735,8 @@
       place-items: center;
       width: 46px;
       height: 46px;
-      border: 1px solid rgba(222, 235, 250, 0.22);
-      background: rgba(18, 25, 34, 0.82);
+      border: 1px solid #cbd5df;
+      background: var(--panel);
       color: var(--text);
       font-size: 28px;
       line-height: 1;
@@ -769,7 +746,8 @@
     .modal-close:hover,
     .modal-close:focus-visible {
       border-color: var(--modal-accent, var(--cert));
-      outline: none;
+      outline: 2px solid color-mix(in srgb, var(--modal-accent, var(--cert)) 18%, transparent);
+      outline-offset: 2px;
     }
 
     .modal-content {
@@ -787,8 +765,8 @@
     }
 
     .modal-card {
-      border: 1px solid rgba(222, 235, 250, 0.14);
-      background: linear-gradient(180deg, rgba(24, 34, 47, 0.88), rgba(12, 18, 26, 0.9));
+      border: 1px solid #d6dee7;
+      background: var(--panel);
       padding: 18px;
       min-height: 164px;
     }
@@ -802,7 +780,7 @@
 
     .modal-card p {
       margin: 10px 0 0;
-      color: #aebccd;
+      color: #5d6a78;
       font-size: 13px;
       line-height: 1.65;
     }
@@ -819,7 +797,7 @@
       display: grid;
       grid-template-columns: 7px 1fr;
       gap: 9px;
-      color: #dce7f4;
+      color: #334252;
       font-size: 12px;
       line-height: 1.5;
     }
@@ -851,8 +829,8 @@
       display: grid;
       grid-template-columns: 145px 1fr;
       gap: 16px;
-      border: 1px solid rgba(222, 235, 250, 0.13);
-      background: rgba(12, 18, 26, 0.72);
+      border: 1px solid #d6dee7;
+      background: var(--panel);
       padding: 14px;
     }
 
@@ -864,7 +842,7 @@
 
     .method-row p {
       margin: 0;
-      color: #dce7f4;
+      color: #334252;
       font-size: 13px;
       line-height: 1.6;
     }
@@ -878,34 +856,16 @@
     @keyframes badgePulse {
       0%,
       100% {
-        opacity: 0.9;
-        box-shadow:
-          0 10px 24px rgba(0, 0, 0, 0.34),
-          0 0 6px 1px color-mix(in srgb, currentColor 18%, transparent),
-          0 0 16px 5px color-mix(in srgb, currentColor 6%, transparent);
+        opacity: 1;
       }
       10% {
         opacity: 1;
-        box-shadow:
-          0 10px 24px rgba(0, 0, 0, 0.34),
-          0 0 14px 5px color-mix(in srgb, currentColor 34%, transparent),
-          0 0 34px 14px color-mix(in srgb, currentColor 15%, transparent),
-          0 0 62px 26px color-mix(in srgb, currentColor 6%, transparent);
       }
       27% {
         opacity: 1;
-        box-shadow:
-          0 10px 24px rgba(0, 0, 0, 0.34),
-          0 0 14px 5px color-mix(in srgb, currentColor 34%, transparent),
-          0 0 34px 14px color-mix(in srgb, currentColor 15%, transparent),
-          0 0 62px 26px color-mix(in srgb, currentColor 6%, transparent);
       }
       40% {
-        opacity: 0.9;
-        box-shadow:
-          0 10px 24px rgba(0, 0, 0, 0.34),
-          0 0 6px 1px color-mix(in srgb, currentColor 18%, transparent),
-          0 0 16px 5px color-mix(in srgb, currentColor 6%, transparent);
+        opacity: 1;
       }
     }
 
@@ -1000,16 +960,16 @@
             </feMerge>
           </filter>
           <marker id="arrow-cert" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#62a8ff"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3e6f89"></path>
           </marker>
           <marker id="arrow-status" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#76d98b"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#4c7a5d"></path>
           </marker>
           <marker id="arrow-key" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#b891ff"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#655c84"></path>
           </marker>
           <marker id="arrow-ldap" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f472b6"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a5d72"></path>
           </marker>
         </defs>
 
@@ -1159,16 +1119,16 @@
             </feMerge>
           </filter>
           <marker id="arrow-cloud-route" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#7cb7ff"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3e6f89"></path>
           </marker>
           <marker id="arrow-cloud-edge" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#5eead4"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f7d78"></path>
           </marker>
           <marker id="arrow-cloud-manage" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffbd66"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b6c34"></path>
           </marker>
           <marker id="arrow-cloud-db" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#b797ff"></path>
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#655c84"></path>
           </marker>
         </defs>
 
@@ -1418,7 +1378,7 @@
         kicker: "产品功能模块",
         title: "RA / Registration Authority",
         subtitle: "RA 位于业务受理侧，负责把用户、机构、审核流程和证书生命周期动作组织成可追踪的申请入口。",
-        accent: "#7cb7ff",
+        accent: "#3e6f89",
         modules: [
           {
             name: "业务受理",
@@ -1446,7 +1406,7 @@
         kicker: "产品功能模块",
         title: "CA / Certificate Authority",
         subtitle: "CA 是证书生命周期核心，负责 CA 体系、证书签发、LDAP发布、吊销发布、状态数据和外部产品协同。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         modules: [
           {
             name: "CA 体系管理",
@@ -1474,7 +1434,7 @@
         kicker: "产品功能模块",
         title: "LDAP / Directory Publication",
         subtitle: "LDAP 是 CA 侧证书材料和吊销材料的目录发布目标，支持内置 OpenLDAP 和外置 LDAPv3 两种运行语义。",
-        accent: "#f472b6",
+        accent: "#8a5d72",
         modules: [
           {
             name: "服务配置",
@@ -1502,7 +1462,7 @@
         kicker: "产品功能模块",
         title: "OCSP / Online Certificate Status Protocol",
         subtitle: "OCSP 对外提供证书状态查询能力，消费 CA 同步的状态数据，并生成带签名的状态响应。",
-        accent: "#74d897",
+        accent: "#4c7a5d",
         modules: [
           {
             name: "状态响应服务",
@@ -1530,7 +1490,7 @@
         kicker: "产品功能模块",
         title: "KMC / Key Management Center",
         subtitle: "KMC 管理密钥生成、消耗、恢复、吊销和 CAKM 响应，向 CA 等系统提供受控的密钥服务。",
-        accent: "#b797ff",
+        accent: "#655c84",
         modules: [
           {
             name: "密钥生命周期",
@@ -1558,7 +1518,7 @@
         kicker: "云版 CA 部署节点",
         title: "租户 / Tenant Access",
         subtitle: "租户通过租户区入口访问 CA 能力，业务请求沿租户区代理链路进入管理区执行。",
-        accent: "#7cb7ff",
+        accent: "#3e6f89",
         modules: [
           { name: "访问入口", desc: "租户侧用户或业务系统只面对租户区入口。", items: ["访问本租户 CA 门户", "发起证书查询与业务操作", "按租户身份进入独立路由"] },
           { name: "边界隔离", desc: "租户入口和管理区执行域分离，避免租户直接触达管理区服务。", items: ["租户区承接入口流量", "管理区承接业务执行", "链路中保留租户上下文"] }
@@ -1568,7 +1528,7 @@
         kicker: "云版 CA 部署节点",
         title: "租户区 Nginx / Tenant Gateway",
         subtitle: "租户区 Nginx 是租户访问链路的第一层网关，负责把请求导向租户区 ca_admin。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         modules: [
           { name: "入口转发", desc: "承接租户侧 HTTP(S) 流量并按路由转发。", items: ["TLS / 域名入口", "静态资源或 API 路由", "转发到租户区 ca_admin"] },
           { name: "租户区隔离", desc: "把租户侧入口固定在租户区网络内。", items: ["管理区服务不直接暴露给租户", "链路从租户区代理进入管理区", "便于入口限流和访问审计"] }
@@ -1578,7 +1538,7 @@
         kicker: "云版 CA 部署节点",
         title: "租户区 ca_admin / CRL Cache",
         subtitle: "租户区 ca_admin 负责 CRL 查询缓存，不在租户区执行完整 CA 业务，业务请求继续进入隔离代理。",
-        accent: "#7cb7ff",
+        accent: "#3e6f89",
         modules: [
           { name: "CRL 查询缓存", desc: "租户区保留 CRL 查询与缓存能力，降低管理区重复读取压力。", items: ["查询 CRL", "缓存 CRL 结果", "面向租户区提供就近读取"] },
           { name: "业务转交", desc: "证书生命周期和管理类业务接口继续经云平台网络隔离 proxyserver 转交管理区 ca_admin 执行。", items: ["传递业务请求", "保留租户上下文", "不在租户区落地业务执行"] }
@@ -1588,7 +1548,7 @@
         kicker: "云版 CA 部署节点",
         title: "云平台网络隔离 proxyserver / Network Isolation Proxy",
         subtitle: "云平台网络隔离 proxyserver 是租户区到管理区之间的跨区代理节点，负责把租户区 ca_admin 的业务流量转发到管理区统服 Nginx。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         modules: [
           { name: "跨区隔离", desc: "在租户区和管理区之间提供受控代理边界。", items: ["租户区不直连管理区服务", "跨区访问路径固定", "便于访问策略和审计收口"] },
           { name: "代理转发", desc: "承接租户区 ca_admin 送出的业务接口请求并进入管理区统服入口。", items: ["转发到管理区统服 Nginx", "保留租户上下文", "承载业务 API 透传"] }
@@ -1598,7 +1558,7 @@
         kicker: "云版 CA 部署节点",
         title: "管理区统服 Nginx / Unified Service Gateway",
         subtitle: "管理区统服 Nginx 接收云平台网络隔离 proxyserver 转入的流量，是进入管理区统一服务链路的入口。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         modules: [
           { name: "统一入口", desc: "承接来自云平台网络隔离 proxyserver 的管理区入口流量。", items: ["接入跨区代理请求", "按租户上下文转发", "连接管理区 Nginx"] },
           { name: "共库模型", desc: "统服和管理区 ca_admin 使用同一组按租户拆分的数据库。", items: ["按库分租户", "一库一租户", "与 ca_admin 共享租户数据边界"] }
@@ -1608,7 +1568,7 @@
         kicker: "云版 CA 部署节点",
         title: "管理区 Nginx / Management Gateway",
         subtitle: "管理区 Nginx 是管理区内部网关，连接统服入口、ca_admin_web 和 ca_admin。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         modules: [
           { name: "管理区路由", desc: "在管理区内承接统一服务入口流量并转发到对应应用。", items: ["转发前端页面请求", "转发管理 API 请求", "隔离内部服务地址"] },
           { name: "控制台入口", desc: "为管理区 ca_admin_web 提供访问入口。", items: ["管理端静态资源", "管理端 API 代理", "统一管理区访问策略"] }
@@ -1618,7 +1578,7 @@
         kicker: "云版 CA 部署节点",
         title: "管理区 ca_admin_web / Admin Console",
         subtitle: "管理区 ca_admin_web 是云版 CA 的管理控制台，页面操作最终调用管理区 ca_admin。",
-        accent: "#ffbd66",
+        accent: "#8b6c34",
         modules: [
           { name: "管理控制台", desc: "提供租户、证书、模板、状态等管理页面。", items: ["租户业务页面", "证书生命周期页面", "系统与审计页面"] },
           { name: "API 调用", desc: "前端不直接执行业务，所有业务能力由管理区 ca_admin 后端承接。", items: ["调用 ca_admin API", "展示业务执行结果", "维护管理端会话与权限"] }
@@ -1628,7 +1588,7 @@
         kicker: "云版 CA 部署节点",
         title: "管理区 ca_admin / Business Executor",
         subtitle: "管理区 ca_admin 是云版 CA 的业务执行核心，承接所有证书生命周期和管理业务接口。",
-        accent: "#ffbd66",
+        accent: "#8b6c34",
         modules: [
           { name: "业务执行", desc: "所有 CA 管理与证书生命周期接口最终在管理区 ca_admin 执行。", items: ["证书签发、更新、吊销", "模板、CA、状态管理", "审计与业务结果回写"] },
           { name: "租户数据访问", desc: "按租户上下文访问对应租户库。", items: ["按库分租户", "一库一租户", "与统服共用数据库模型"] }
@@ -1638,7 +1598,7 @@
         kicker: "云版 CA 部署节点",
         title: "管理区数据库 / Tenant Databases",
         subtitle: "管理区 ca_admin 和统服共用数据库，数据库按租户拆分，一库一租户。",
-        accent: "#b797ff",
+        accent: "#655c84",
         modules: [
           { name: "租户分库", desc: "数据模型以租户库为隔离单位。", items: ["按库分租户", "一库一租户", "租户上下文决定目标库"] },
           { name: "共用数据边界", desc: "统服与管理区 ca_admin 在管理区内共享同一租户库模型。", items: ["统服访问租户库", "ca_admin 访问租户库", "跨服务保持同一租户数据视图"] }
@@ -1651,7 +1611,7 @@
         kicker: "产品联动详情",
         title: "RA ⇄ CA",
         subtitle: "RA 负责业务受理与审核入口，CA 负责站点授权、证书签发与生命周期处理；两者之间通过 RA 站点授权 API、CMP 二进制协议和管理查询接口形成联动。",
-        accent: "#62a8ff",
+        accent: "#3e6f89",
         summary: {
           name: "联动边界",
           desc: "RA 不直接完成签名签发，CA 不直接承接全部业务受理；CA 侧维护 RA 站点、站点证书、管理员和授权范围，并通过 CMP 接收签发、更新、吊销、密钥恢复等证书业务消息。",
@@ -1703,7 +1663,7 @@
         kicker: "产品联动详情",
         title: "CA ⇄ OCSP",
         subtitle: "CA 产生证书状态事实并主动推送到 OCSP /update；OCSP 维护本地状态视图并对外提供标准 OCSP 查询响应。",
-        accent: "#76d98b",
+        accent: "#4c7a5d",
         summary: {
           name: "联动边界",
           desc: "CA 是证书状态的权威来源，OCSP 是在线查询服务；正式同步由 CA 构造 PKIX 状态载荷，携带 CA 通信证书序列号请求头，POST 到 OCSP Responder 的 /update。",
@@ -1743,7 +1703,7 @@
         kicker: "产品联动详情",
         title: "CA → LDAP",
         subtitle: "CA 通过 LDAP 服务配置管理发布目标，并在证书与 CRL 生命周期完成后把证书材料、吊销列表和发布失败补偿记录写入 LDAP 相关结构。",
-        accent: "#f472b6",
+        accent: "#8a5d72",
         summary: {
           name: "联动边界",
           desc: "CA 是证书和吊销事实的权威来源，LDAP 是目录发布目标；CA 负责配置、初始化、连接检测和发布编排，LDAP 负责保存可检索的证书与 CRL 二进制属性。",
@@ -1794,7 +1754,7 @@
         kicker: "产品联动详情",
         title: "CA ⇄ KMC",
         subtitle: "CA 在双证书签发、更新、延期、吊销或恢复场景下对接 KMC；CA 将 CAKM 二进制载荷 Base64 后放入 JSON data 字段，调用 KMC /keyops/consume、/restore、/revoke。",
-        accent: "#b891ff",
+        accent: "#655c84",
         summary: {
           name: "联动边界",
           desc: "CA 编排证书业务，KMC 负责 CAKM 协议解析、签名验证、密钥生成/恢复/吊销与 HSM 调用；KMC 返回加密公钥和数字信封封装后的私钥，CA 用于生成或更新加密证书。",
@@ -1835,7 +1795,7 @@
         kicker: "云版 CA 部署链路",
         title: "租户 → 租户区 Nginx",
         subtitle: "租户访问首先进入租户区 Nginx，入口层负责把租户流量限制在租户区网络边界内。",
-        accent: "#7cb7ff",
+        accent: "#3e6f89",
         summary: { name: "链路边界", desc: "租户不直接访问管理区服务，所有请求先进入租户区入口。", items: ["租户访问入口", "租户区网关承接", "保留租户访问上下文"] },
         interactions: [
           { name: "入口访问", desc: "租户侧用户或系统访问租户区域名。", items: ["HTTP(S) 请求", "租户域名或入口路径", "访问日志与限流策略"] },
@@ -1847,7 +1807,7 @@
         kicker: "云版 CA 部署链路",
         title: "租户区 Nginx → 租户区 ca_admin",
         subtitle: "租户区 Nginx 将请求转发到租户区 ca_admin，租户区 ca_admin 负责 CRL 查询缓存并把业务请求交给隔离代理。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         summary: { name: "链路边界", desc: "租户区 ca_admin 不承接完整业务执行，核心职责是代理和 CRL 缓存。", items: ["入口代理", "CRL 查询与缓存", "业务请求继续进入管理区"] },
         interactions: [
           { name: "入口转发", desc: "把租户入口请求送入租户区 ca_admin。", items: ["保留原始租户上下文", "区分 CRL 查询和业务接口", "记录代理访问链路"] },
@@ -1859,7 +1819,7 @@
         kicker: "云版 CA 部署链路",
         title: "租户区 ca_admin → 云平台网络隔离 proxyserver",
         subtitle: "租户区 ca_admin 将需要管理区执行的业务接口送入云平台网络隔离 proxyserver。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         summary: { name: "链路边界", desc: "除 CRL 缓存外，租户区业务请求继续进入隔离代理，准备跨区转发到管理区。", items: ["租户区业务转交", "租户上下文传递", "进入隔离代理"] },
         interactions: [
           { name: "业务转交", desc: "租户区 ca_admin 把证书业务、管理业务等接口交给隔离代理。", items: ["业务 API 请求", "租户标识", "认证和审计上下文"] },
@@ -1871,7 +1831,7 @@
         kicker: "云版 CA 部署链路",
         title: "云平台网络隔离 proxyserver → 管理区统服 Nginx",
         subtitle: "云平台网络隔离 proxyserver 将业务接口转交管理区统服 Nginx，管理区开始承接后续业务链路。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         summary: { name: "链路边界", desc: "跨区代理进入管理区统一服务入口，后续由管理区 ca_admin 承接所有业务接口执行。", items: ["跨区代理", "进入管理区统服入口", "业务执行转交管理区"] },
         interactions: [
           { name: "跨区转发", desc: "隔离代理把租户区业务请求转发到管理区统服 Nginx。", items: ["业务 API 请求", "租户上下文", "受控跨区通道"] },
@@ -1883,7 +1843,7 @@
         kicker: "云版 CA 部署链路",
         title: "管理区统服 Nginx → 管理区 Nginx",
         subtitle: "管理区统服 Nginx 将进入管理区的统一服务流量转入管理区 Nginx。",
-        accent: "#5eead4",
+        accent: "#4f7d78",
         summary: { name: "链路边界", desc: "统服入口负责管理区统一接入，管理区 Nginx 负责内部应用路由。", items: ["统一服务入口", "管理区内部路由", "进入 ca_admin_web / ca_admin 链路"] },
         interactions: [
           { name: "统一接入", desc: "统服 Nginx 接收并规范化来自租户区的流量。", items: ["租户上下文校验", "入口路由", "转入管理区 Nginx"] },
@@ -1895,7 +1855,7 @@
         kicker: "云版 CA 部署链路",
         title: "管理区 Nginx → 管理区 ca_admin_web",
         subtitle: "管理区 Nginx 提供 ca_admin_web 管理控制台入口，页面运行在管理区侧。",
-        accent: "#ffbd66",
+        accent: "#8b6c34",
         summary: { name: "链路边界", desc: "ca_admin_web 只提供管理交互页面，业务动作通过后续 API 调用 ca_admin。", items: ["管理控制台入口", "静态资源服务", "页面 API 入口"] },
         interactions: [
           { name: "控制台访问", desc: "用户进入管理区 ca_admin_web 页面。", items: ["证书管理页面", "租户管理页面", "系统配置页面"] },
@@ -1907,7 +1867,7 @@
         kicker: "云版 CA 部署链路",
         title: "管理区 ca_admin_web → 管理区 ca_admin",
         subtitle: "管理区 ca_admin_web 的业务操作最终调用管理区 ca_admin，所有业务接口由管理区 ca_admin 执行。",
-        accent: "#ffbd66",
+        accent: "#8b6c34",
         summary: { name: "链路边界", desc: "云版 CA 的业务执行集中在管理区 ca_admin，租户区 ca_admin 不执行完整业务。", items: ["所有业务接口执行", "证书生命周期处理", "管理区统一审计"] },
         interactions: [
           { name: "业务接口", desc: "前端页面调用 ca_admin 后端完成真实业务。", items: ["签发、更新、吊销", "模板与 CA 管理", "审计与查询"] },
@@ -1919,7 +1879,7 @@
         kicker: "云版 CA 数据链路",
         title: "管理区 ca_admin ⇄ 管理区数据库",
         subtitle: "管理区 ca_admin 按租户上下文访问对应租户库，数据模型是一库一租户。",
-        accent: "#b797ff",
+        accent: "#655c84",
         summary: { name: "数据边界", desc: "业务执行时根据租户上下文选择目标库，租户之间按库隔离。", items: ["按库分租户", "一库一租户", "ca_admin 读写业务数据"] },
         interactions: [
           { name: "业务读写", desc: "ca_admin 在对应租户库内完成证书、模板、状态和审计数据读写。", items: ["证书生命周期数据", "租户业务配置", "审计与状态记录"] },
@@ -1993,15 +1953,15 @@
         "kmc": { x: -186, y: 177 }
       },
       cloud: {
-        "cloud-tenant": { x: -772, y: -203 },
-        "cloud-tenant-nginx": { x: -319, y: -215 },
-        "cloud-tenant-ca": { x: 108, y: -273 },
-        "cloud-isolation-proxy": { x: 728, y: -273 },
-        "cloud-unified-nginx": { x: 505, y: -20 },
-        "cloud-manage-nginx": { x: 675, y: 231 },
-        "cloud-admin-web": { x: 213, y: 200 },
-        "cloud-admin": { x: -234, y: 232 },
-        "cloud-db": { x: -653, y: 216 }
+        "cloud-tenant": { x: -430, y: -150 },
+        "cloud-tenant-nginx": { x: -215, y: -150 },
+        "cloud-tenant-ca": { x: 0, y: -165 },
+        "cloud-isolation-proxy": { x: 330, y: -225 },
+        "cloud-unified-nginx": { x: 330, y: 45 },
+        "cloud-manage-nginx": { x: 330, y: 255 },
+        "cloud-admin-web": { x: 0, y: 220 },
+        "cloud-admin": { x: -215, y: 220 },
+        "cloud-db": { x: -430, y: 220 }
       }
     };
     let currentView = "classic";
