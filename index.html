@@ -899,6 +899,191 @@
     }
 
     @media (max-width: 760px) {
+      body {
+        min-height: 100dvh;
+        overflow: auto;
+      }
+
+      .shell {
+        width: 100%;
+        height: auto;
+        min-height: 100dvh;
+        padding: 18px 16px 28px;
+        transform: none !important;
+      }
+
+      .title {
+        position: static;
+        max-width: none;
+        padding-right: 52px;
+      }
+
+      .title h1 {
+        font-size: 22px;
+        line-height: 1.18;
+        text-wrap: balance;
+      }
+
+      .title p {
+        font-size: 12px;
+      }
+
+      .view-toggle {
+        position: static;
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+        margin-top: 16px;
+        white-space: normal;
+        line-height: 1.35;
+      }
+
+      .legend {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+        font-size: 11px;
+      }
+
+      .legend-item {
+        min-width: 0;
+        padding: 8px;
+      }
+
+      .legend-item span:last-child {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .github-link {
+        top: 16px;
+        right: 16px;
+        width: 40px;
+        height: 40px;
+      }
+
+      .layout-tools {
+        display: none;
+      }
+
+      .canvas {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        min-height: 920px;
+        margin-top: 14px;
+        border: 1px solid #d6dee7;
+        background: rgba(255, 255, 255, 0.56);
+        overflow: visible;
+      }
+
+      .canvas.cloud-canvas {
+        min-height: 1480px;
+      }
+
+      .flow-svg {
+        position: absolute;
+        inset: 0;
+      }
+
+      .flow-hit {
+        stroke-width: 34;
+      }
+
+      .node,
+      .node.ca,
+      .node.kmc,
+      .node.ldap,
+      .node.cloud {
+        width: min(calc(100% - 28px), 360px);
+        min-height: 0;
+        padding: 14px;
+        cursor: pointer;
+        touch-action: pan-y;
+      }
+
+      .node-head {
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .node-mark,
+      .node.cloud .node-mark {
+        width: 38px;
+        height: 38px;
+        font-size: 12px;
+      }
+
+      .node h2 {
+        font-size: 22px;
+        line-height: 1.08;
+        overflow-wrap: anywhere;
+      }
+
+      .node.cloud h2 {
+        font-size: 18px;
+      }
+
+      .node p,
+      .node.cloud p {
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .node ul {
+        gap: 6px;
+        margin-top: 12px;
+      }
+
+      .node li {
+        font-size: 11px;
+      }
+
+      .flow-label {
+        width: 34px;
+        height: 34px;
+      }
+
+      .flow-label::before {
+        width: 34px;
+        height: 34px;
+      }
+
+      .detail-modal {
+        height: 100dvh;
+        padding: 18px 16px;
+      }
+
+      .modal-topbar {
+        align-items: flex-start;
+        gap: 14px;
+        padding-bottom: 16px;
+      }
+
+      .modal-title {
+        font-size: 30px;
+        line-height: 1.05;
+      }
+
+      .modal-subtitle {
+        margin-top: 12px;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .modal-close {
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+      }
+
+      .modal-content {
+        gap: 16px;
+        padding-top: 18px;
+      }
+
       .modal-grid,
       .modal-wide {
         grid-template-columns: 1fr;
@@ -909,8 +1094,9 @@
         gap: 8px;
       }
 
-      .modal-title {
-        font-size: 34px;
+      .modal-card {
+        min-height: 0;
+        padding: 15px;
       }
     }
   </style>
@@ -1967,11 +2153,31 @@
     let currentView = "classic";
     let lastActiveElement = null;
     let dragState = null;
+    const compactMedia = window.matchMedia("(max-width: 760px)");
+    const compactNodeGap = 52;
+    const compactNodeOrder = {
+      classic: ["ra", "ca", "ocsp", "kmc", "ldap"],
+      cloud: [
+        "cloud-tenant",
+        "cloud-tenant-nginx",
+        "cloud-tenant-ca",
+        "cloud-isolation-proxy",
+        "cloud-unified-nginx",
+        "cloud-manage-nginx",
+        "cloud-admin-web",
+        "cloud-admin",
+        "cloud-db"
+      ]
+    };
 
     function setActiveFlow(id, active) {
       document.querySelectorAll(`[data-flow="${id}"]`).forEach((el) => {
         el.classList.toggle("active", active);
       });
+    }
+
+    function isCompactLayout() {
+      return compactMedia.matches;
     }
 
     function activeCanvas() {
@@ -2003,7 +2209,7 @@
 
     function setNodePosition(node, left, top, canvasEl = node.closest(".canvas")) {
       const size = canvasSize(canvasEl);
-      const safeTopMin = canvasEl.dataset.view === "cloud" ? 128 : 96;
+      const safeTopMin = isCompactLayout() ? 16 : (canvasEl.dataset.view === "cloud" ? 128 : 96);
       const safeLeft = clamp(left, 18, size.width - node.offsetWidth - 18);
       const safeTop = clamp(top, safeTopMin, size.height - node.offsetHeight - 18);
       node.style.left = `${safeLeft}px`;
@@ -2087,6 +2293,13 @@
       });
       const motion = flow.querySelector("animateMotion");
       motion.setAttribute("path", d);
+      if (isCompactLayout()) {
+        const targetId = activeFlowPairs()[flowId][1];
+        const target = nodeBox(targetId);
+        label.style.left = `${target.cx - label.offsetWidth / 2}px`;
+        label.style.top = `${target.top - label.offsetHeight - 9}px`;
+        return;
+      }
       const labelPoint = cubicPoint(path, 0.52);
       label.style.left = `${labelPoint.x - label.offsetWidth / 2}px`;
       label.style.top = `${labelPoint.y - label.offsetHeight / 2}px`;
@@ -2099,6 +2312,15 @@
     }
 
     function centerDefaultLayout() {
+      canvases.forEach((canvasEl) => {
+        canvasEl.style.height = "";
+      });
+
+      if (isCompactLayout()) {
+        stackCompactLayout();
+        return;
+      }
+
       const size = canvasSize();
       const center = {
         x: size.width / 2,
@@ -2143,6 +2365,26 @@
       updateAllFlows();
     }
 
+    function stackCompactLayout() {
+      const canvasEl = activeCanvas();
+      const nodes = compactNodeOrder[currentView].map((id) => productNodeMap[id]).filter(Boolean);
+      const topPadding = 18;
+      const sidePadding = 14;
+      const gap = compactNodeGap;
+      const totalHeight = nodes.reduce((sum, node) => sum + node.offsetHeight, topPadding * 2) + gap * Math.max(0, nodes.length - 1);
+      const minHeight = currentView === "cloud" ? 1480 : 920;
+      canvasEl.style.height = `${Math.max(totalHeight, minHeight)}px`;
+
+      let top = topPadding;
+      nodes.forEach((node) => {
+        const left = Math.round((canvasEl.offsetWidth - node.offsetWidth) / 2);
+        setNodePosition(node, Math.max(sidePadding, left), top, canvasEl);
+        top += node.offsetHeight + gap;
+      });
+
+      updateAllFlows();
+    }
+
     function clientToCanvasPoint(event) {
       const canvasEl = activeCanvas();
       const rect = canvasEl.getBoundingClientRect();
@@ -2155,7 +2397,7 @@
     }
 
     function beginNodeDrag(event, node) {
-      if (event.button !== 0 || !modal.hidden) {
+      if (event.button !== 0 || !modal.hidden || isCompactLayout()) {
         return;
       }
       const point = clientToCanvasPoint(event);
