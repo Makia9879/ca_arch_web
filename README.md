@@ -1,25 +1,27 @@
 # CA 架构图网页
 
-本目录承载 RA、CA、OCSP、KMC 产品联通架构图与云版 CA 部署架构图网页。页面以单文件 HTML 形式交付，直接通过浏览器或静态文件服务器打开即可查看。
+本目录承载 RA、CA、LDAP、OCSP、KMC 产品联通架构图与云版 CA 部署架构图网页。页面以单文件 HTML 形式交付，直接通过浏览器或静态文件服务器打开即可查看。
 
 ## 页面定位
 
-`index.html` 提供一个可交互的架构画布。页面默认居中展示 RA、CA、OCSP、KMC 四个产品卡片，并通过三条数据流连线展示产品之间的核心联动关系。页面左上角提供切换按钮，可在产品联通架构图和云版 CA 部署架构图之间互相切换。
+`index.html` 提供一个可交互的架构画布。页面默认居中展示 RA、CA、LDAP、OCSP、KMC 五个产品卡片，并通过四条数据流连线展示产品之间的核心联动关系。页面左上角提供切换按钮，可在产品联通架构图和云版 CA 部署架构图之间互相切换。
 
 ## 架构对象
 
 - RA 表示注册审核侧产品对象，负责证书申请、审核流转和业务入口。
-- CA 表示证书签发核心产品对象，负责证书生命周期、状态发布和外部产品协同。
+- CA 表示证书签发核心产品对象，负责证书生命周期、LDAP发布、状态发布和外部产品协同。
+- LDAP 表示目录发布目标，负责保存 CA 发布的 CA 证书、用户证书、用户加密证书、CRL、Delta CRL 和 ARL 等目录材料。
 - OCSP 表示在线证书状态服务产品对象，负责状态查询、响应生成和响应签名。
 - KMC 表示密钥管理中心产品对象，负责密钥生成、消耗、恢复、吊销、CAKM 响应和 HSM 能力封装。
 
 ## 连线关系
 
-产品联通架构图保留三条核心连线。
+产品联通架构图保留四条核心连线。
 
 | 连线 | 含义 |
 | --- | --- |
 | RA-CA | 以 RA 站点管理维护站点证书、管理员、可用 CA / 子 CA / V2X 隐式证书和模板范围；RA 侧按站点证书序列号查询授权信息，证书业务通过 `/cmp/request`、`/cmp/kur`、`/cmp/rr`、`/std/cmpkrr` 等 CMP 入口处理，传递 PKCS#10 CSR、证书链、PKIStatus 和失败原因。 |
+| CA-LDAP | CA 通过 `/ca/ldap/service/config`、`/config/save`、`/config/initialize`、`/config/test-connection`、`/config/test-search`、`/overview`、`/operate` 管理 LDAP 服务；内置模式由本地 agent 安装或更新 OpenLDAP 配置，外置模式只验证用户管理的 LDAPv3 目标；发布侧将 CA 证书、用户证书、用户加密证书、CRL、Delta CRL 和 ARL 写入固定 OU 与二进制属性，失败进入 `T_ldap_publish_compensation` 补偿重试。 |
 | CA-OCSP | CA 保存 OCSP 地址、端口、协议和服务器证书配置；正式同步由 CA 构造 PKIX 状态载荷，携带 `X-CA-Cert-SN` 请求头 POST 到 OCSP `/update`，OCSP 侧用 CA peer 证书校验来源，并继续支撑 OCSP over HTTP(S) 查询响应。 |
 | CA-KMC | CA 保存 KMC 地址、端口、启用状态和通信证书配置；连通性测试调用 `/api/v1/connverify/kmcSignature`，证书双证书场景通过 `/api/v1/keyops/consume`、`/api/v1/keyops/restore`、`/api/v1/keyops/revoke` 传输 JSON `data` 字段中的 Base64 CAKM 二进制载荷。 |
 

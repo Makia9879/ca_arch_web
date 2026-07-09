@@ -17,6 +17,7 @@
       --ca: #ffbd66;
       --ocsp: #74d897;
       --kmc: #b797ff;
+      --ldap: #f472b6;
       --cert: #62a8ff;
       --status: #76d98b;
       --key: #b891ff;
@@ -192,6 +193,10 @@
       color: var(--key);
     }
 
+    .flow.ldap {
+      color: var(--ldap);
+    }
+
     .flow.tenant,
     .flow.route {
       color: var(--tenant);
@@ -322,6 +327,11 @@
     .node.kmc {
       width: 270px;
       color: var(--kmc);
+    }
+
+    .node.ldap {
+      width: 270px;
+      color: var(--ldap);
     }
 
     .node.cloud {
@@ -490,6 +500,10 @@
       color: var(--key);
     }
 
+    .flow-label.ldap {
+      color: var(--ldap);
+    }
+
     .flow-label.tenant,
     .flow-label.route {
       color: var(--tenant);
@@ -580,6 +594,10 @@
 
     .legend-item.key {
       color: var(--key);
+    }
+
+    .legend-item.ldap {
+      color: var(--ldap);
     }
 
     .legend-item.route,
@@ -940,8 +958,8 @@
 <body>
   <main class="shell">
     <section class="title" aria-label="架构图标题">
-      <h1 id="page-title">RA / CA / OCSP / KMC 产品联通架构</h1>
-      <p id="page-subtitle">证书业务、状态同步与密钥服务之间的数据流关系</p>
+      <h1 id="page-title">RA / CA / LDAP / OCSP / KMC 产品联通架构</h1>
+      <p id="page-subtitle">证书业务、LDAP发布、状态同步与密钥服务之间的数据流关系</p>
     </section>
 
     <button class="view-toggle" type="button" id="view-toggle" aria-pressed="false">切换为云版 CA 部署架构</button>
@@ -956,7 +974,7 @@
       <div class="legend-item cert"><span class="legend-line"></span><span id="legend-cert">证书业务</span></div>
       <div class="legend-item status"><span class="legend-line"></span><span id="legend-status">状态服务</span></div>
       <div class="legend-item key"><span class="legend-line"></span><span id="legend-key">密钥服务</span></div>
-      <div class="legend-item manage" hidden><span class="legend-line"></span><span id="legend-extra">Web-CA 接口</span></div>
+      <div class="legend-item ldap"><span class="legend-line"></span><span id="legend-extra">LDAP发布</span></div>
     </section>
 
     <div class="layout-tools">
@@ -990,6 +1008,9 @@
           <marker id="arrow-key" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#b891ff"></path>
           </marker>
+          <marker id="arrow-ldap" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f472b6"></path>
+          </marker>
         </defs>
 
         <g class="flow cert" data-flow="ra-ca" role="button" tabindex="0" aria-label="查看 RA 和 CA 联动详情">
@@ -1014,6 +1035,14 @@
           <path class="flow-core" d="M 790 500 C 990 545, 1035 650, 875 735"></path>
           <circle class="flow-dot" r="5"><animateMotion dur="2.2s" repeatCount="indefinite" path="M 790 500 C 990 545, 1035 650, 875 735"></animateMotion></circle>
           <path class="flow-hit" d="M 790 500 C 990 545, 1035 650, 875 735"></path>
+        </g>
+
+        <g class="flow ldap" data-flow="ca-ldap" role="button" tabindex="0" aria-label="查看 CA 和 LDAP 联动详情">
+          <path class="flow-base" d="M 650 500 C 515 545, 405 650, 565 735" marker-end="url(#arrow-ldap)"></path>
+          <path class="flow-glow" d="M 650 500 C 515 545, 405 650, 565 735"></path>
+          <path class="flow-core" d="M 650 500 C 515 545, 405 650, 565 735"></path>
+          <circle class="flow-dot" r="5"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 650 500 C 515 545, 405 650, 565 735"></animateMotion></circle>
+          <path class="flow-hit" d="M 650 500 C 515 545, 405 650, 565 735"></path>
         </g>
 
       </svg>
@@ -1047,6 +1076,22 @@
           <li>根 / 子 CA 与用户证书签发</li>
           <li>证书状态与吊销数据管理</li>
           <li>OCSP / KMC 业务协同</li>
+        </ul>
+      </article>
+
+      <article class="node ldap" data-product="ldap" role="button" tabindex="0" aria-label="查看 LDAP 产品功能模块">
+        <div class="node-head">
+          <div class="node-mark">LD</div>
+          <div>
+            <h2>LDAP</h2>
+            <div class="name">Directory Publication</div>
+          </div>
+        </div>
+        <p>承接 CA 发布的证书与吊销材料，提供目录初始化、连接检测和二进制属性写入能力。</p>
+        <ul>
+          <li>内置 / 外置 LDAPv3 配置</li>
+          <li>证书与 CRL 目录发布</li>
+          <li>失败补偿与重试</li>
         </ul>
       </article>
 
@@ -1090,6 +1135,9 @@
       </div>
       <div class="flow-label key label-ca-kmc" data-code="!" data-flow="ca-kmc" role="button" tabindex="0" aria-label="点击查看 CA 和 KMC 联动详情" title="点击查看 CA 和 KMC 联动详情">
         <span>CA ⇄ KMC：CAKM 二进制载荷、keyops consume / restore / revoke</span>
+      </div>
+      <div class="flow-label ldap" data-code="!" data-flow="ca-ldap" role="button" tabindex="0" aria-label="点击查看 CA 和 LDAP 联动详情" title="点击查看 CA 和 LDAP 联动详情">
+        <span>CA → LDAP：配置 LDAP 服务，发布 CA/用户证书、加密证书、CRL/Delta CRL/ARL，并记录失败补偿</span>
       </div>
     </div>
 
@@ -1397,7 +1445,7 @@
       ca: {
         kicker: "产品功能模块",
         title: "CA / Certificate Authority",
-        subtitle: "CA 是证书生命周期核心，负责 CA 体系、证书签发、吊销发布、状态数据和外部产品协同。",
+        subtitle: "CA 是证书生命周期核心，负责 CA 体系、证书签发、LDAP发布、吊销发布、状态数据和外部产品协同。",
         accent: "#5eead4",
         modules: [
           {
@@ -1417,8 +1465,36 @@
           },
           {
             name: "外部集成",
-            desc: "对接 RA、OCSP、KMC 等产品，形成完整证书业务链路。",
-            items: ["RA 站点授权与 CMP 接入", "OCSP 状态同步", "KMC keyops / CAKM 密钥服务对接"]
+            desc: "对接 RA、LDAP、OCSP、KMC 等产品，形成完整证书业务链路。",
+            items: ["RA 站点授权与 CMP 接入", "LDAP 证书与 CRL 发布", "OCSP 状态同步", "KMC keyops / CAKM 密钥服务对接"]
+          }
+        ]
+      },
+      ldap: {
+        kicker: "产品功能模块",
+        title: "LDAP / Directory Publication",
+        subtitle: "LDAP 是 CA 侧证书材料和吊销材料的目录发布目标，支持内置 OpenLDAP 和外置 LDAPv3 两种运行语义。",
+        accent: "#f472b6",
+        modules: [
+          {
+            name: "服务配置",
+            desc: "CA 通过 LDAP 服务配置维护发布目标、协议、Base DN、凭据和证书材料。",
+            items: ["runMode=INTERNAL / EXTERNAL", "ldap / ldaps、地址、端口、Base DN", "管理员 DN 或外部绑定 DN"]
+          },
+          {
+            name: "目录初始化",
+            desc: "初始化目录基准结构，为后续证书与 CRL 发布准备固定 OU。",
+            items: ["创建 baseDN", "创建 cACertificates、userCertificates", "创建 CRLDistributePoints、ARLDistributePoints"]
+          },
+          {
+            name: "发布写入",
+            desc: "CA 业务完成后把证书或吊销材料写入 LDAP 二进制属性。",
+            items: ["cACertificate;binary", "userCertificate;binary", "certificateRevocationList;binary / deltaRevocationList;binary"]
+          },
+          {
+            name: "补偿重试",
+            desc: "实时发布失败时记录补偿任务，由后续重试恢复发布一致性。",
+            items: ["T_ldap_publish_compensation", "PENDING / RETRYING / FAILED 状态", "按目标 DN 和属性去重重试"]
           }
         ]
       },
@@ -1663,6 +1739,57 @@
           ["响应签名证书", "OCSP 侧通过响应签名证书列表、Issuer 绑定和启用状态决定实际签名证书。"]
         ]
       },
+      "ca-ldap": {
+        kicker: "产品联动详情",
+        title: "CA → LDAP",
+        subtitle: "CA 通过 LDAP 服务配置管理发布目标，并在证书与 CRL 生命周期完成后把证书材料、吊销列表和发布失败补偿记录写入 LDAP 相关结构。",
+        accent: "#f472b6",
+        summary: {
+          name: "联动边界",
+          desc: "CA 是证书和吊销事实的权威来源，LDAP 是目录发布目标；CA 负责配置、初始化、连接检测和发布编排，LDAP 负责保存可检索的证书与 CRL 二进制属性。",
+          items: ["LDAP 配置接口位于 /ca/ldap/service/*，支持 INTERNAL 与 EXTERNAL 两种 runMode", "内置模式由 CA 通过本地 agent 安装或更新 OpenLDAP 配置，外置模式只做绑定校验并作为发布目标", "目录初始化创建 baseDN 以及 cACertificates、userCertificates、CRLDistributePoints、ARLDistributePoints", "CA 发布 CA 证书、用户证书、用户加密证书、FULL / DELTA CRL 和 ARL", "发布失败进入 T_ldap_publish_compensation，后续按目标 DN、属性和对象类型重试"]
+        },
+        interactions: [
+          {
+            name: "服务配置",
+            desc: "CA 保存 LDAP 运行模式、协议、地址、端口、Base DN、凭据和 LDAPS 材料，并返回扁平配置对象供前端使用。",
+            items: ["/ca/ldap/service/config", "/ca/ldap/service/config/save", "runMode、protocol、serverAddress、baseDn"]
+          },
+          {
+            name: "目录初始化",
+            desc: "CA 初始化 LDAP 目录根结构。内置模式可先触发 OpenLDAP 配置安装并启动服务，外置模式只连接用户管理的 LDAPv3 目录。",
+            items: ["/ca/ldap/service/config/initialize", "createRootOUs", "baseDN 与四类根 OU"]
+          },
+          {
+            name: "连接与检索测试",
+            desc: "CA 使用当前表单或已保存配置执行 bind 和最小检索，验证 LDAP 目标是否可用于后续发布。",
+            items: ["/ca/ldap/service/config/test-connection", "/ca/ldap/service/config/test-search", "bind DN / admin DN 与 Base DN 检索"]
+          },
+          {
+            name: "证书发布",
+            desc: "CA 证书、用户签名证书和用户加密证书发布为 LDAP 条目中的二进制证书属性。",
+            items: ["CA_CERT → cACertificate;binary", "USER_CERT / USER_ENC_CERT → userCertificate;binary", "按 CA 序列号、Issuer 序列号、签发日期和证书序列号定位 DN"]
+          },
+          {
+            name: "CRL 发布",
+            desc: "CA 生成或刷新 CRL 后发布到 CRL / ARL 分发点，增量 CRL 使用 deltaRevocationList;binary 属性。",
+            items: ["CRLDistributePoints / ARLDistributePoints", "certificateRevocationList;binary", "deltaRevocationList;binary"]
+          },
+          {
+            name: "补偿重试",
+            desc: "发布失败不回滚证书业务，CA 记录补偿项并在后续重试任务中重新写入目标 DN。",
+            items: ["PENDING / RETRYING / FAILED", "targetDnHash + targetAttribute 去重", "成功后删除补偿记录"]
+          }
+        ],
+        methods: [
+          ["REST 管理", "CA 暴露 /ca/ldap/service/config、/save、/initialize、/test-connection、/test-search、/overview、/operate 管理 LDAP 目标。"],
+          ["INTERNAL", "CA 管理内置 OpenLDAP，配置变更通过本地 agent 安装或更新配置，operate 支持 start、stop、restart、health-check。"],
+          ["EXTERNAL", "用户管理外部 LDAPv3，CA 保存连接信息、验证 bind / search，并把该目录作为发布目标，不启动或重启本地 OpenLDAP。"],
+          ["LDAP DN", "CA 证书写入 cn={serial},ou=cACertificates,{baseDN}；用户证书写入 cn={serial},ou={date},ou={issuer},ou=userCertificates,{baseDN}。"],
+          ["CRL / Delta CRL", "CRL 写入 cn=crl 或 cn=arl 分发点；FULL 使用 certificateRevocationList;binary，DELTA 使用 deltaRevocationList;binary。"],
+          ["非阻塞发布", "证书业务落库完成后尝试发布，LDAP 失败进入补偿表，避免目录不可用直接破坏主业务事务。"]
+        ]
+      },
       "ca-kmc": {
         kicker: "产品联动详情",
         title: "CA ⇄ KMC",
@@ -1826,6 +1953,7 @@
     const flowPairsByView = {
       classic: {
         "ra-ca": ["ra", "ca"],
+        "ca-ldap": ["ca", "ldap"],
         "ca-ocsp": ["ca", "ocsp"],
         "ca-kmc": ["ca", "kmc"]
       },
@@ -1842,11 +1970,11 @@
     };
     const viewMeta = {
       classic: {
-        title: "RA / CA / OCSP / KMC 产品联通架构",
-        subtitle: "证书业务、状态同步与密钥服务之间的数据流关系",
+        title: "RA / CA / LDAP / OCSP / KMC 产品联通架构",
+        subtitle: "证书业务、LDAP发布、状态同步与密钥服务之间的数据流关系",
         toggle: "切换为云版 CA 部署架构",
-        legend: ["证书业务", "状态服务", "密钥服务"],
-        legendClasses: ["cert", "status", "key"]
+        legend: ["证书业务", "状态服务", "密钥服务", "LDAP发布"],
+        legendClasses: ["cert", "status", "key", "ldap"]
       },
       cloud: {
         title: "云版 CA 部署架构",
@@ -1858,10 +1986,11 @@
     };
     const viewLayouts = {
       classic: {
-        ra: { x: -455, y: -128 },
-        ca: { x: 0, y: -138 },
-        ocsp: { x: 455, y: -128 },
-        kmc: { x: -10, y: 250 }
+        "ra": { x: -385, y: -173 },
+        "ca": { x: 0, y: -183 },
+        "ldap": { x: 579, y: 151 },
+        "ocsp": { x: 608, y: -198 },
+        "kmc": { x: -186, y: 177 }
       },
       cloud: {
         "cloud-tenant": { x: -772, y: -203 },
@@ -2012,8 +2141,8 @@
     function centerDefaultLayout() {
       const size = canvasSize();
       const center = {
-        x: Math.min(size.width, window.innerWidth) / 2,
-        y: Math.min(size.height, window.innerHeight) / 2
+        x: size.width / 2,
+        y: size.height / 2
       };
 
       if (currentView === "cloud") {
@@ -2197,8 +2326,8 @@
     function currentLayoutSnippet() {
       const size = canvasSize();
       const center = {
-        x: Math.min(size.width, window.innerWidth) / 2,
-        y: Math.min(size.height, window.innerHeight) / 2
+        x: size.width / 2,
+        y: size.height / 2
       };
       const lines = activeProductNodes().map((node) => {
         const id = node.dataset.product;
